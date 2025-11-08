@@ -1,0 +1,6 @@
+Flask
+flask-jwt-extended
+pymongo
+passlib
+python-dotenv
+PyJWT
