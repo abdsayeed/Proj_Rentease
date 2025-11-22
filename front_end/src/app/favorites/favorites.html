@@ -1,0 +1,37 @@
+<div class="favorites-container">
+  <div class="favorites-header">
+    <button class="back-btn" (click)="goBack()">← Dashboard</button>
+    <h1>❤️ My Favorites</h1>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading favorites...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{error}}
+  </div>
+
+  <div *ngIf="!loading && !error && properties.length === 0" class="empty-state">
+    <div class="empty-icon">💔</div>
+    <h2>No Favorites Yet</h2>
+    <p>Start browsing properties and save your favorites!</p>
+    <button class="browse-btn" (click)="goBack()">Browse Properties</button>
+  </div>
+
+  <div *ngIf="!loading && !error && properties.length > 0" class="properties-grid">
+    <div *ngFor="let property of properties" class="property-card">
+      <div class="property-image">
+        <div class="image-placeholder">🏠</div>
+        <button class="remove-btn" (click)="removeFavorite(property._id)">✖</button>
+      </div>
+      <div class="property-content">
+        <h3>{{property.title}}</h3>
+        <p class="location">📍 {{property.location}}</p>
+        <p class="price">£{{property.price | number}}/month</p>
+        <button class="view-btn" (click)="viewProperty(property._id)">View Details</button>
+      </div>
+    </div>
+  </div>
+</div>

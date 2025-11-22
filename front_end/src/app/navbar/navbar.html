@@ -1,0 +1,40 @@
+<nav class="navbar">
+  <div class="nav-container">
+    <a routerLink="/" class="logo">
+      <span class="logo-icon">🏠</span>
+      <span class="logo-text">Rentease</span>
+    </a>
+    
+    <button class="menu-toggle" (click)="toggleMenu()">
+      <span *ngIf="!menuOpen">☰</span>
+      <span *ngIf="menuOpen">✖</span>
+    </button>
+    
+    <ul class="nav-menu" [class.active]="menuOpen">
+      <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
+      
+      <li *ngIf="!isLoggedIn()">
+        <a routerLink="/login" routerLinkActive="active">Login</a>
+      </li>
+      <li *ngIf="!isLoggedIn()">
+        <a routerLink="/register" routerLinkActive="active">Register</a>
+      </li>
+      
+      <li *ngIf="isLoggedIn()">
+        <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+      </li>
+      <li *ngIf="isLoggedIn()">
+        <a routerLink="/favorites" routerLinkActive="active">Favorites</a>
+      </li>
+      <li *ngIf="isLoggedIn() && (getRole() === 'agent' || getRole() === 'admin')">
+        <a routerLink="/add-property" routerLinkActive="active">Add Property</a>
+      </li>
+      <li *ngIf="isLoggedIn()" class="user-info">
+        <span class="role-badge">{{getRole()}}</span>
+      </li>
+      <li *ngIf="isLoggedIn()">
+        <button class="logout-btn" (click)="logout()">Logout</button>
+      </li>
+    </ul>
+  </div>
+</nav>

@@ -1,0 +1,107 @@
+<div class="details-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading property details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-state">
+    <h2>{{error}}</h2>
+    <button class="back-btn" (click)="goBack()">Back to Home</button>
+  </div>
+
+  <!-- Property Details -->
+  <div *ngIf="!loading && !error && property" class="details-content">
+    <button class="back-btn-top" (click)="goBack()">← Back</button>
+
+    <div class="property-main">
+      <!-- Property Image -->
+      <div class="property-image-section">
+        <div class="property-image-large">
+          <div class="image-placeholder">🏠</div>
+          <button class="favorite-btn" (click)="toggleFavorite()" [class.active]="isFavorite">
+            {{isFavorite ? '❤️' : '🤍'}}
+          </button>
+        </div>
+      </div>
+
+      <!-- Property Info -->
+      <div class="property-info-section">
+        <div class="property-header">
+          <h1>{{property.title}}</h1>
+          <div class="property-badge">{{property.property_type || 'Apartment' | titlecase}}</div>
+        </div>
+
+        <p class="property-location">📍 {{property.location}}</p>
+        <h2 class="property-price">£{{property.price | number}}<span>/month</span></h2>
+
+        <div class="property-status">
+          <span class="status-badge" [class.available]="property.available !== false" [class.unavailable]="property.available === false">
+            {{property.available === false ? 'Not Available' : 'Available'}}
+          </span>
+        </div>
+
+        <!-- Property Features -->
+        <div class="property-features">
+          <h3>Property Details</h3>
+          <div class="features-grid">
+            <div class="feature-item">
+              <span class="feature-icon">🏘️</span>
+              <div>
+                <p class="feature-label">Type</p>
+                <p class="feature-value">{{property.property_type || 'Apartment' | titlecase}}</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">📍</span>
+              <div>
+                <p class="feature-label">Location</p>
+                <p class="feature-value">{{property.location}}</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">💰</span>
+              <div>
+                <p class="feature-label">Rent</p>
+                <p class="feature-value">£{{property.price | number}}/mo</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button class="primary-btn" (click)="toggleInquiryForm()" *ngIf="!showInquiryForm">
+            💬 Send Inquiry
+          </button>
+          <button class="secondary-btn" (click)="toggleFavorite()">
+            {{isFavorite ? '❤️ Saved' : '🤍 Save Property'}}
+          </button>
+        </div>
+
+        <!-- Inquiry Form -->
+        <div *ngIf="showInquiryForm" class="inquiry-form">
+          <h3>Send Inquiry</h3>
+          <div *ngIf="inquirySuccess" class="success-message">
+            ✓ Inquiry sent successfully!
+          </div>
+          <textarea
+            [(ngModel)]="inquiryMessage"
+            placeholder="Write your message here..."
+            class="inquiry-textarea"
+            rows="4"
+          ></textarea>
+          <div class="inquiry-actions">
+            <button class="submit-btn" (click)="sendInquiry()" [disabled]="!inquiryMessage.trim()">
+              Send Message
+            </button>
+            <button class="cancel-btn" (click)="toggleInquiryForm()">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

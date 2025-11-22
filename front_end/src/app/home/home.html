@@ -1,0 +1,143 @@
+<div class="home-container">
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">Find Your Perfect Home</h1>
+      <p class="hero-subtitle">Discover amazing properties across the United Kingdom</p>
+      
+      <!-- Quick Search -->
+      <div class="quick-search">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (input)="applySearch()"
+          placeholder="Search by location or property name..."
+          class="search-input"
+        />
+        <button class="search-btn" (click)="applySearch()">
+          <span>🔍</span> Search
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters Section -->
+  <section class="filters-section">
+    <div class="container">
+      <div class="filters-card">
+        <h3>Filter Properties</h3>
+        <div class="filters-grid">
+          <div class="filter-item">
+            <label>City</label>
+            <select [(ngModel)]="selectedDistrict" (change)="loadProperties()" class="filter-select">
+              <option value="">All Cities</option>
+              <option *ngFor="let district of districts" [value]="district">{{district}}</option>
+            </select>
+          </div>
+          
+          <div class="filter-item">
+            <label>Property Type</label>
+            <select [(ngModel)]="selectedType" (change)="loadProperties()" class="filter-select">
+              <option value="">All Types</option>
+              <option *ngFor="let type of propertyTypes" [value]="type">{{type | titlecase}}</option>
+            </select>
+          </div>
+          
+          <div class="filter-item">
+            <label>Min Price</label>
+            <input 
+              type="number" 
+              [(ngModel)]="minPrice" 
+              (change)="loadProperties()"
+              placeholder="0" 
+              class="filter-input"
+            />
+          </div>
+          
+          <div class="filter-item">
+            <label>Max Price</label>
+            <input 
+              type="number" 
+              [(ngModel)]="maxPrice" 
+              (change)="loadProperties()"
+              placeholder="Any" 
+              class="filter-input"
+            />
+          </div>
+          
+          <div class="filter-item">
+            <button class="clear-btn" (click)="clearFilters()">Clear Filters</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Properties Grid -->
+  <section class="properties-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Available Properties</h2>
+        <p>{{filteredProperties.length}} properties found</p>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading properties...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error" class="error-message">
+        <p>{{error}}</p>
+        <button (click)="loadProperties()">Try Again</button>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading && !error && filteredProperties.length === 0" class="empty-state">
+        <div class="empty-icon">🏠</div>
+        <h3>No Properties Found</h3>
+        <p>Try adjusting your filters or search query</p>
+        <button class="primary-btn" (click)="clearFilters()">Clear Filters</button>
+      </div>
+
+      <!-- Properties Grid -->
+      <div *ngIf="!loading && !error && filteredProperties.length > 0" class="properties-grid">
+        <div *ngFor="let property of filteredProperties" class="property-card">
+          <div class="property-image">
+            <div class="property-badge">{{property.property_type || 'Apartment'}}</div>
+            <div class="property-placeholder">🏠</div>
+          </div>
+          
+          <div class="property-content">
+            <h3 class="property-title">{{property.title}}</h3>
+          <p class="property-location">📍 {{property.location}}</p>
+          <p class="property-price">£{{property.price | number}}/month</p>            <div class="property-features">
+              <span class="feature" *ngIf="property.available !== false">✓ Available</span>
+              <span class="feature unavailable" *ngIf="property.available === false">✗ Unavailable</span>
+            </div>
+            
+            <button class="view-btn" (click)="viewDetails(property._id)">
+              View Details →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section" *ngIf="!isLoggedIn()">
+    <div class="container">
+      <div class="cta-content">
+        <h2>Ready to Find Your Dream Home?</h2>
+        <p>Join thousands of happy renters and property owners</p>
+        <div class="cta-buttons">
+          <button class="primary-btn" (click)="goToRegister()">Get Started</button>
+          <button class="secondary-btn" (click)="goToLogin()">Sign In</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

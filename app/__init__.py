@@ -1,4 +1,5 @@
 from flask import Flask,jsonify
+from flask_cors import CORS
 from .extensions import init_extensions
 from .properties.routes import properties_app
 from .auth.routes import auth_app
@@ -8,6 +9,7 @@ from .user.routes import user_app
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     init_extensions(app)
     
     app.register_blueprint(properties_app,url_prefix="/api/v1/properties")
