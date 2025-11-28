@@ -1,19 +1,36 @@
 import { Routes } from '@angular/router';
-import { Home } from './home/home';
-import { Login } from './login/login';
-import { Register } from './register/register';
-import { PropertyDetails } from './property-details/property-details';
-import { Dashboard } from './dashboard/dashboard';
-import { Favorites } from './favorites/favorites';
-import { AddProperty } from './add-property/add-property';
+import { authGuard, agentGuard } from './core/guards/auth.guard';
+import { HomeComponent } from './features/properties/home/home.component';
+import { LoginComponent } from './features/auth/login/login.component';
+import { RegisterComponent } from './features/auth/register/register.component';
 
 export const routes: Routes = [
-  { path: '', component: Home },
-  { path: 'login', component: Login },
-  { path: 'register', component: Register },
-  { path: 'property/:id', component: PropertyDetails },
-  { path: 'dashboard', component: Dashboard },
-  { path: 'favorites', component: Favorites },
-  { path: 'add-property', component: AddProperty },
-  { path: '**', redirectTo: '' }
+  // Public routes
+  { path: '', redirectTo: 'properties', pathMatch: 'full' },
+  { path: 'properties', component: HomeComponent },
+  { path: 'properties/:id', component: undefined },
+
+  // Auth routes
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+
+  // Protected routes
+  {
+    path: 'dashboard',
+    component: undefined,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'favorites',
+    component: undefined,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'add-property',
+    component: undefined,
+    canActivate: [agentGuard]
+  },
+
+  // Catch-all
+  { path: '**', redirectTo: 'properties' }
 ];
