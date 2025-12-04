@@ -41,14 +41,18 @@ export class Favorites implements OnInit {
   }
 
   loadFavorites() {
+    this.loading = false; // Show content immediately
     this.apiService.getFavorites().subscribe({
       next: (data) => {
-        this.favorites = data;
-        this.loadPropertyDetails();
+        this.favorites = data || [];
+        if (this.favorites.length > 0) {
+          this.loadPropertyDetails();
+        }
       },
       error: (err) => {
+        console.error('Error loading favorites:', err);
         this.error = 'Failed to load favorites';
-        this.loading = false;
+        this.favorites = [];
       }
     });
   }
@@ -56,16 +60,20 @@ export class Favorites implements OnInit {
   loadPropertyDetails() {
     const propertyIds = this.favorites.map(f => f.property_id);
     
+    if (propertyIds.length === 0) {
+      return;
+    }
+    
     propertyIds.forEach(id => {
       this.apiService.getProperty(id).subscribe({
         next: (property) => {
           this.properties.push(property);
         },
-        error: () => {}
+        error: (err) => {
+          console.error('Error loading property:', id, err);
+        }
       });
     });
-    
-    this.loading = false;
   }
 
   removeFavorite(propertyId: string) {

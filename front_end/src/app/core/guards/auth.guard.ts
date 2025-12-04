@@ -1,40 +1,21 @@
-import { Injectable, inject } from '@angular/core';
-import { Router, CanActivateFn, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthGuard {
-  constructor(private auth: AuthService, private router: Router) {}
-
-  canActivate(): boolean {
-    return this.auth.isAuthenticated() ? true : (this.router.navigate(['/login']), false);
-  }
-}
-
+/**
+ * Auth Guard
+ * Protects routes that require authentication
+ * Redirects to login if user is not authenticated
+ */
 export const authGuard: CanActivateFn = (route, state) => {
-  const auth = inject(AuthService);
+  const authService = inject(AuthService);
   const router = inject(Router);
-  return auth.isAuthenticated() ? true : (router.navigate(['/login']), false);
-};
 
-export const agentGuard: CanActivateFn = (route, state) => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-  if (auth.isAuthenticated() && auth.hasRole('agent')) {
+  if (authService.isAuthenticated()) {
     return true;
   }
-  router.navigate(['/']);
-  return false;
-};
 
-export const adminGuard: CanActivateFn = (route, state) => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-  if (auth.isAuthenticated() && auth.hasRole('admin')) {
-    return true;
-  }
-  router.navigate(['/']);
+  // Redirect to login page with return URL
+  router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
   return false;
 };

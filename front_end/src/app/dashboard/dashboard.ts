@@ -64,100 +64,69 @@ export class Dashboard implements OnInit {
   }
 
   loadUserData() {
-    this.loading = true;
-    console.log('Loading user favorites...');
-    
-    // Set timeout
-    const timeoutId = setTimeout(() => {
-      if (this.loading) {
-        console.error('Request timeout');
-        this.loading = false;
-        alert('Request timeout. Please refresh the page.');
-      }
-    }, 10000);
+    this.loading = false; // Show content immediately
+    console.log('Loading user data...');
     
     this.apiService.getFavorites().subscribe({
       next: (data) => {
-        clearTimeout(timeoutId);
         console.log('Favorites loaded:', data);
-        this.favorites = data;
-        this.loading = false;
+        this.favorites = data || [];
       },
       error: (err) => {
-        clearTimeout(timeoutId);
         console.error('Error loading favorites:', err);
-        this.loading = false;
-        alert('Failed to load favorites. Please try logging in again.');
+        this.favorites = [];
       }
     });
     
     this.apiService.getInquiries().subscribe({
-      next: (data) => this.inquiries = data,
-      error: (err) => console.error(err)
+      next: (data) => {
+        this.inquiries = data || [];
+      },
+      error: (err) => {
+        console.error('Error loading inquiries:', err);
+        this.inquiries = [];
+      }
     });
   }
 
   loadAgentData() {
-    this.loading = true;
+    this.loading = false; // Show content immediately
     console.log('Loading agent properties...');
-    
-    // Set timeout
-    const timeoutId = setTimeout(() => {
-      if (this.loading) {
-        console.error('Request timeout');
-        this.loading = false;
-        alert('Request timeout. Please refresh the page.');
-      }
-    }, 10000);
     
     this.apiService.getAgentProperties().subscribe({
       next: (data: any) => {
-        clearTimeout(timeoutId);
         console.log('Agent properties loaded:', data);
         this.myProperties = Array.isArray(data) ? data : [];
-        this.loading = false;
       },
       error: (err: any) => {
-        clearTimeout(timeoutId);
         console.error('Error loading agent properties:', err);
-        this.loading = false;
         this.myProperties = [];
-        alert('Failed to load properties. Please check your connection.');
       }
     });
   }
 
   loadAdminData() {
-    this.loading = true;
+    this.loading = false; // Show content immediately
     console.log('Loading admin statistics...');
-    
-    // Set timeout
-    const timeoutId = setTimeout(() => {
-      if (this.loading) {
-        console.error('Request timeout');
-        this.loading = false;
-        alert('Request timeout. Please refresh the page.');
-      }
-    }, 10000);
     
     this.apiService.getStatistics().subscribe({
       next: (data) => {
-        clearTimeout(timeoutId);
         console.log('Statistics loaded:', data);
         this.statistics = data;
-        this.loading = false;
       },
       error: (err) => {
-        clearTimeout(timeoutId);
         console.error('Error loading statistics:', err);
-        this.loading = false;
-        alert('Failed to load statistics. Please try again.');
       }
     });
     
     this.apiService.getAllUsers().subscribe({
-      next: (data) => this.allUsers = data,
-      error: (err) => console.error(err)
+      next: (data) => {
+        this.allUsers = data || [];
+      },
+      error: (err) => {
+        console.error('Error loading users:', err);
+        this.allUsers = [];
+      }
     });
   }
 
@@ -167,6 +136,7 @@ export class Dashboard implements OnInit {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
           localStorage.removeItem('role');
+          localStorage.removeItem('user');
         }
         this.router.navigate(['/login']);
       },
@@ -174,6 +144,7 @@ export class Dashboard implements OnInit {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
           localStorage.removeItem('role');
+          localStorage.removeItem('user');
         }
         this.router.navigate(['/login']);
       }

@@ -1,36 +1,50 @@
 import { Routes } from '@angular/router';
-import { authGuard, agentGuard } from './core/guards/auth.guard';
-import { HomeComponent } from './features/properties/home/home.component';
-import { LoginComponent } from './features/auth/login/login.component';
-import { RegisterComponent } from './features/auth/register/register.component';
+import { authGuard, agentGuard, adminGuard } from './core';
 
 export const routes: Routes = [
-  // Public routes
-  { path: '', redirectTo: 'properties', pathMatch: 'full' },
-  { path: 'properties', component: HomeComponent },
-  { path: 'properties/:id', component: undefined },
-
-  // Auth routes
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
-
-  // Protected routes
+  {
+    path: '',
+    redirectTo: '/properties',
+    pathMatch: 'full'
+  },
+  {
+    path: 'properties',
+    loadComponent: () => import('./home/home').then(m => m.Home)
+  },
+  {
+    path: 'property/:id',
+    loadComponent: () => import('./property-details/property-details').then(m => m.PropertyDetails)
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./login/login').then(m => m.Login)
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./register/register').then(m => m.Register)
+  },
   {
     path: 'dashboard',
-    component: undefined,
+    loadComponent: () => import('./dashboard/dashboard').then(m => m.Dashboard),
     canActivate: [authGuard]
   },
   {
     path: 'favorites',
-    component: undefined,
+    loadComponent: () => import('./favorites/favorites').then(m => m.Favorites),
     canActivate: [authGuard]
   },
   {
     path: 'add-property',
-    component: undefined,
+    loadComponent: () => import('./add-property/add-property').then(m => m.AddProperty),
     canActivate: [agentGuard]
   },
-
-  // Catch-all
-  { path: '**', redirectTo: 'properties' }
+  {
+    path: 'admin',
+    loadComponent: () => import('./admin/admin').then(m => m.Admin),
+    canActivate: [adminGuard]
+  },
+  {
+    path: '**',
+    redirectTo: '/properties'
+  }
 ];

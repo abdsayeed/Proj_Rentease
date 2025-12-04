@@ -29,6 +29,9 @@
       <li *ngIf="isLoggedIn() && (getRole() === 'agent' || getRole() === 'admin')">
         <a routerLink="/add-property" routerLinkActive="active">Add Property</a>
       </li>
+      <li *ngIf="isLoggedIn() && getRole() === 'admin'">
+        <a routerLink="/admin" routerLinkActive="active">Admin Panel</a>
+      </li>
       <li *ngIf="isLoggedIn()" class="user-info">
         <span class="role-badge">{{getRole()}}</span>
       </li>

@@ -21,7 +21,9 @@ export class Navbar {
   
   getRole(): string {
     if (typeof window === 'undefined') return '';
-    return localStorage.getItem('role') || '';
+    const role = localStorage.getItem('role') || '';
+    console.log('Navbar - Current role:', role);
+    return role;
   }
   
   toggleMenu() {
@@ -32,6 +34,7 @@ export class Navbar {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('role');
+      localStorage.removeItem('user');
     }
     this.router.navigate(['/']);
   }

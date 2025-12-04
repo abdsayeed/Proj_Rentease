@@ -75,6 +75,10 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/api/v1/agent/properties`, data, { headers: this.getHeaders() });
   }
 
+  createAgentProperty(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/api/v1/agent/properties`, data, { headers: this.getHeaders() });
+  }
+
   updateProperty(id: string, data: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/api/v1/agent/properties/${id}`, data, { headers: this.getHeaders() });
   }
@@ -133,5 +137,19 @@ export class ApiService {
 
   updateUserRole(userId: string, role: string): Observable<any> {
     return this.http.put(`${this.baseUrl}/api/v1/admin/users/${userId}/role`, { role }, { headers: this.getHeaders() });
+  }
+
+  getAllProperties(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/api/v1/admin/properties`, { headers: this.getHeaders() }).pipe(
+      timeout(this.requestTimeout),
+      catchError(err => {
+        console.error('API Error:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  adminDeleteProperty(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/api/v1/admin/properties/${id}`, { headers: this.getHeaders() });
   }
 }

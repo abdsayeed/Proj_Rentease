@@ -1,0 +1,147 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <button class="back-btn" (click)="goBack()">← Dashboard</button>
+    <h1>🔧 Admin Panel</h1>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-content">
+        <h3>{{ statistics?.users || 0 }}</h3>
+        <p>Total Users</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🏠</div>
+      <div class="stat-content">
+        <h3>{{ statistics?.properties || 0 }}</h3>
+        <p>Total Properties</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">❤️</div>
+      <div class="stat-content">
+        <h3>{{ statistics?.favorites || 0 }}</h3>
+        <p>Total Favorites</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📧</div>
+      <div class="stat-content">
+        <h3>{{ statistics?.inquiries || 0 }}</h3>
+        <p>Total Inquiries</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'users'" 
+      (click)="activeTab = 'users'">
+      Users
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'properties'" 
+      (click)="activeTab = 'properties'">
+      Properties
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <!-- Users Tab -->
+  <div *ngIf="activeTab === 'users'" class="tab-content">
+    <h2>Manage Users</h2>
+    
+    <div *ngIf="loadingUsers" class="loading">
+      <div class="spinner"></div>
+      <p>Loading users...</p>
+    </div>
+
+    <div *ngIf="!loadingUsers && users.length > 0" class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>{{ user.email }}</td>
+            <td>
+              <span class="badge" [class.badge-user]="user.role === 'user'" 
+                    [class.badge-agent]="user.role === 'agent'"
+                    [class.badge-admin]="user.role === 'admin'">
+                {{ user.role }}
+              </span>
+            </td>
+            <td>{{ user.createdAt | date:'short' }}</td>
+            <td>
+              <select 
+                class="role-select" 
+                [(ngModel)]="user.role" 
+                (change)="updateUserRole(user._id, user.role)">
+                <option value="user">User</option>
+                <option value="agent">Agent</option>
+                <option value="admin">Admin</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Properties Tab -->
+  <div *ngIf="activeTab === 'properties'" class="tab-content">
+    <h2>Manage Properties</h2>
+    
+    <div *ngIf="loadingProperties" class="loading">
+      <div class="spinner"></div>
+      <p>Loading properties...</p>
+    </div>
+
+    <div *ngIf="!loadingProperties && properties.length > 0" class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Location</th>
+            <th>Price</th>
+            <th>Type</th>
+            <th>Available</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let property of properties">
+            <td>{{ property.title }}</td>
+            <td>{{ property.location }}</td>
+            <td>£{{ property.price | number }}</td>
+            <td>{{ property.property_type || 'N/A' }}</td>
+            <td>
+              <span class="badge" [class.badge-success]="property.available" 
+                    [class.badge-secondary]="!property.available">
+                {{ property.available ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <button class="delete-btn" (click)="deleteProperty(property._id)">
+                Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

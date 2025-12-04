@@ -1,11 +1,61 @@
-// ============================================
-// AUTH MODELS
-// ============================================
+/**
+ * TypeScript interfaces matching backend JSON responses
+ */
 
+// User interface
 export interface User {
-  _id?: string;
+  _id: string;
   email: string;
   role: 'user' | 'agent' | 'admin';
+  createdAt?: string;
+}
+
+// Property interface
+export interface Property {
+  _id: string;
+  type: string;
+  title: string;
+  description?: string;
+  price: number;
+  location: string;
+  property_type: 'apartment' | 'house' | 'flat' | 'studio' | 'penthouse';
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: number;
+  amenities?: string[];
+  images?: string[];
+  agent_id?: string;
+  available: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Favorite interface
+export interface Favorite {
+  _id: string;
+  type: string;
+  user_id: string;
+  property_id: string;
+  createdAt?: string;
+}
+
+// Inquiry interface
+export interface Inquiry {
+  _id: string;
+  type: string;
+  user_id: string;
+  property_id: string;
+  agent_id?: string;
+  message: string;
+  status?: 'pending' | 'responded' | 'closed';
+  createdAt?: string;
+}
+
+// Auth request/response interfaces
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  role?: 'user' | 'agent';
 }
 
 export interface LoginRequest {
@@ -13,76 +63,48 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
-  token: string;
-  user: User;
+export interface AuthResponse {
+  msg: string;
+  access_token: string;
+  role: string;
+  user_id?: string;
 }
 
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  confirmPassword?: string;
-  role: 'user' | 'agent';
+export interface RegisterResponse {
+  msg: string;
+  user_id: string;
+  role: string;
 }
 
-// ============================================
-// PROPERTY MODELS
-// ============================================
-
-export type PropertyType =
-  | 'apartment'
-  | 'house'
-  | 'flat'
-  | 'studio'
-  | 'penthouse'
-  | 'bungalow'
-  | 'cottage'
-  | 'mews';
-
-export interface Property {
-  _id: string;
-  title: string;
-  description?: string;
-  price: number;
-  location: string;
-  property_type: PropertyType;
-  bedrooms?: number;
-  bathrooms?: number;
-  area?: number;
-  available: boolean;
-  agent_id?: string;
-  createdAt?: Date;
-}
-
+// Property filter interface
 export interface PropertyFilters {
   district?: string;
-  type?: PropertyType;
+  type?: string;
   price_min?: number;
   price_max?: number;
-  search?: string;
 }
 
-// ============================================
-// USER ACTION MODELS
-// ============================================
-
-export interface Favorite {
-  _id?: string;
-  user_id?: string;
-  property_id: string;
-  createdAt?: Date;
+// Statistics interface
+export interface Statistics {
+  users: number;
+  properties: number;
+  favorites: number;
+  inquiries: number;
 }
 
-export interface Inquiry {
-  _id?: string;
-  user_id?: string;
-  property_id: string;
-  message: string;
-  status?: 'pending' | 'responded' | 'closed';
-  createdAt?: Date;
+// Generic API response interfaces
+export interface ApiResponse {
+  msg?: string;
+  message?: string;
+  error?: string;
+  id?: string;
 }
 
-export interface InquiryRequest {
-  property_id: string;
-  message: string;
+// JWT Token payload interface
+export interface TokenPayload {
+  sub?: string;
+  identity?: string;
+  role: string;
+  user_id: string;
+  exp: number;
 }

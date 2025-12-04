@@ -32,8 +32,12 @@ export class AddProperty implements OnInit {
   ngOnInit() {
     if (typeof window === 'undefined') return;
     const role = localStorage.getItem('role');
+    console.log('Add Property - Current role:', role);
+    
+    // The agentGuard already protects this route, so we don't need to redirect
+    // Just log for debugging
     if (role !== 'agent' && role !== 'admin') {
-      this.router.navigate(['/dashboard']);
+      console.warn('User role is not agent or admin:', role);
     }
   }
 
@@ -52,7 +56,13 @@ export class AddProperty implements OnInit {
     
     this.loading = true;
     
-    this.apiService.createProperty(this.property).subscribe({
+    // Convert price to number
+    const propertyData = {
+      ...this.property,
+      price: parseInt(this.property.price)
+    };
+    
+    this.apiService.createAgentProperty(propertyData).subscribe({
       next: (response) => {
         this.loading = false;
         this.success = true;
@@ -62,7 +72,8 @@ export class AddProperty implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err.error?.Error || 'Failed to add property';
+        this.error = err.error?.error || err.error?.Error || 'Failed to add property';
+        console.error('Error adding property:', err);
       }
     });
   }
