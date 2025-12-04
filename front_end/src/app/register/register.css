@@ -45,6 +45,16 @@
   font-size: 1rem;
 }
 
+.form-input.is-invalid {
+  border-color: #dc3545;
+}
+
+.invalid-feedback {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
 .success-message {
   text-align: center;
   padding: 40px 20px;

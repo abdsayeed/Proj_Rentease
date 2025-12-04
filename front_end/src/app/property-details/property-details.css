@@ -35,6 +35,22 @@
   margin-bottom: 20px;
 }
 
+.status-available {
+  background-color: #4caf50;
+  color: white;
+}
+
+.status-unavailable {
+  background-color: #f44336;
+  color: white;
+}
+
+.property-date {
+  margin-top: 10px;
+  color: #666;
+  font-style: italic;
+}
+
 .back-btn-top {
   background: transparent;
   border: 1px solid #e5e5e5;

@@ -5,21 +5,24 @@
     <p>Loading property details...</p>
   </div>
 
-  <!-- Error State -->
-  <div *ngIf="error" class="error-state">
-    <h2>{{error}}</h2>
-    <button class="back-btn" (click)="goBack()">Back to Home</button>
-  </div>
-
   <!-- Property Details -->
-  <div *ngIf="!loading && !error && property" class="details-content">
+  <div *ngIf="!loading && property" class="details-content">
     <button class="back-btn-top" (click)="goBack()">← Back</button>
 
     <div class="property-main">
       <!-- Property Image -->
       <div class="property-image-section">
         <div class="property-image-large">
-          <div class="image-placeholder">🏠</div>
+          <img 
+            *ngIf="property.images && property.images.length > 0; else placeholderImg"
+            [src]="property.images[0]" 
+            [alt]="property.title"
+            appBrokenImage
+            class="property-img"
+          />
+          <ng-template #placeholderImg>
+            <div class="image-placeholder">🏠</div>
+          </ng-template>
           <button class="favorite-btn" (click)="toggleFavorite()" [class.active]="isFavorite">
             {{isFavorite ? '❤️' : '🤍'}}
           </button>
@@ -34,12 +37,16 @@
         </div>
 
         <p class="property-location">📍 {{property.location}}</p>
-        <h2 class="property-price">£{{property.price | number}}<span>/month</span></h2>
+        <h2 class="property-price">{{property.price | currency:'GBP':'symbol':'1.0-0'}}<span>/month</span></h2>
 
         <div class="property-status">
-          <span class="status-badge" [class.available]="property.available !== false" [class.unavailable]="property.available === false">
-            {{property.available === false ? 'Not Available' : 'Available'}}
+          <span class="status-badge" [ngClass]="statusClass">
+            {{statusText}}
           </span>
+        </div>
+        
+        <div *ngIf="property.createdAt" class="property-date">
+          <small>Listed {{property.createdAt | dateAgo}}</small>
         </div>
 
         <!-- Property Features -->
@@ -83,9 +90,6 @@
         <!-- Inquiry Form -->
         <div *ngIf="showInquiryForm" class="inquiry-form">
           <h3>Send Inquiry</h3>
-          <div *ngIf="inquirySuccess" class="success-message">
-            ✓ Inquiry sent successfully!
-          </div>
           <textarea
             [(ngModel)]="inquiryMessage"
             placeholder="Write your message here..."
@@ -93,10 +97,10 @@
             rows="4"
           ></textarea>
           <div class="inquiry-actions">
-            <button class="submit-btn" (click)="sendInquiry()" [disabled]="!inquiryMessage.trim()">
-              Send Message
+            <button class="submit-btn" (click)="sendInquiry()" [disabled]="!inquiryMessage.trim() || sendingInquiry">
+              {{ sendingInquiry ? 'Sending...' : 'Send Message' }}
             </button>
-            <button class="cancel-btn" (click)="toggleInquiryForm()">
+            <button class="cancel-btn" (click)="toggleInquiryForm()" [disabled]="sendingInquiry">
               Cancel
             </button>
           </div>

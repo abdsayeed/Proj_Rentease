@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
-import { authGuard, agentGuard, adminGuard } from './core';
+import { authGuard } from './core/guards/auth.guard';
+import { agentGuard } from './core/guards/agent.guard';
+import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -12,7 +14,7 @@ export const routes: Routes = [
     loadComponent: () => import('./home/home').then(m => m.Home)
   },
   {
-    path: 'property/:id',
+    path: 'properties/:id',
     loadComponent: () => import('./property-details/property-details').then(m => m.PropertyDetails)
   },
   {

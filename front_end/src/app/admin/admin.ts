@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../services/api.service';
+import { AuthService } from '../core/services/auth.service';
 
 interface User {
   _id: string;
@@ -45,14 +46,14 @@ export class Admin implements OnInit {
 
   constructor(
     private apiService: ApiService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
   ngOnInit() {
     if (typeof window === 'undefined') return;
     
-    const role = localStorage.getItem('role');
-    if (role !== 'admin') {
+    if (!this.authService.isAdmin()) {
       this.router.navigate(['/dashboard']);
       return;
     }

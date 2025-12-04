@@ -1,6 +1,6 @@
 <nav class="navbar">
   <div class="nav-container">
-    <a routerLink="/" class="logo">
+    <a routerLink="/properties" class="logo">
       <span class="logo-icon">🏠</span>
       <span class="logo-text">Rentease</span>
     </a>
@@ -11,31 +11,41 @@
     </button>
     
     <ul class="nav-menu" [class.active]="menuOpen">
-      <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
+      <li><a routerLink="/properties" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Properties</a></li>
       
-      <li *ngIf="!isLoggedIn()">
+      <!-- Not Logged In -->
+      <li *ngIf="!isLoggedIn">
         <a routerLink="/login" routerLinkActive="active">Login</a>
       </li>
-      <li *ngIf="!isLoggedIn()">
+      <li *ngIf="!isLoggedIn">
         <a routerLink="/register" routerLinkActive="active">Register</a>
       </li>
       
-      <li *ngIf="isLoggedIn()">
+      <!-- Logged In - All Users -->
+      <li *ngIf="isLoggedIn">
         <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
       </li>
-      <li *ngIf="isLoggedIn()">
+      <li *ngIf="isLoggedIn">
         <a routerLink="/favorites" routerLinkActive="active">Favorites</a>
       </li>
-      <li *ngIf="isLoggedIn() && (getRole() === 'agent' || getRole() === 'admin')">
+      
+      <!-- Agent & Admin Only -->
+      <li *ngIf="isAgent">
         <a routerLink="/add-property" routerLinkActive="active">Add Property</a>
       </li>
-      <li *ngIf="isLoggedIn() && getRole() === 'admin'">
+      
+      <!-- Admin Only -->
+      <li *ngIf="isAdmin">
         <a routerLink="/admin" routerLinkActive="active">Admin Panel</a>
       </li>
-      <li *ngIf="isLoggedIn()" class="user-info">
-        <span class="role-badge">{{getRole()}}</span>
+      
+      <!-- User Info -->
+      <li *ngIf="isLoggedIn && currentUser" class="user-info">
+        <span class="role-badge">{{currentUser.role | titlecase}}</span>
       </li>
-      <li *ngIf="isLoggedIn()">
+      
+      <!-- Logout -->
+      <li *ngIf="isLoggedIn">
         <button class="logout-btn" (click)="logout()">Logout</button>
       </li>
     </ul>

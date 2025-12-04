@@ -11,7 +11,7 @@
         <input 
           type="text" 
           [(ngModel)]="searchQuery" 
-          (input)="applySearch()"
+          (input)="onSearchChange()"
           placeholder="Search by location or property name..."
           class="search-input"
         />
@@ -88,22 +88,23 @@
         <p>Loading properties...</p>
       </div>
 
-      <!-- Error State -->
-      <div *ngIf="error" class="error-message">
-        <p>{{error}}</p>
-        <button (click)="loadProperties()">Try Again</button>
-      </div>
-
       <!-- Empty State -->
-      <div *ngIf="!loading && !error && filteredProperties.length === 0" class="empty-state">
+      <div *ngIf="!loading && filteredProperties.length === 0" class="empty-state">
         <div class="empty-icon">🏠</div>
         <h3>No Properties Found</h3>
-        <p>Try adjusting your filters or search query</p>
-        <button class="primary-btn" (click)="clearFilters()">Clear Filters</button>
+        <p *ngIf="hasActiveFilters || searchQuery">
+          No properties match your search criteria. Try adjusting your filters or search terms.
+        </p>
+        <p *ngIf="!hasActiveFilters && !searchQuery">
+          No properties are currently available. Please check back later.
+        </p>
+        <button class="primary-btn" (click)="clearFilters()" *ngIf="hasActiveFilters || searchQuery">
+          Clear All Filters
+        </button>
       </div>
 
       <!-- Properties Grid -->
-      <div *ngIf="!loading && !error && filteredProperties.length > 0" class="properties-grid">
+      <div *ngIf="!loading && filteredProperties.length > 0" class="properties-grid">
         <div *ngFor="let property of filteredProperties" class="property-card">
           <div class="property-image">
             <div class="property-badge">{{property.property_type || 'Apartment'}}</div>

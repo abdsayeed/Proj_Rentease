@@ -1,29 +1,33 @@
 import { Component, OnInit, PLATFORM_ID, Inject } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../services/api.service';
+import { Property } from '../core/models';
+import { BrokenImageDirective } from '../shared/directives/broken-image.directive';
+import { DateAgoPipe } from '../shared/pipes/date-ago.pipe';
+import { ToastService } from '../shared/services/toast.service';
 
 @Component({
   selector: 'app-property-details',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CurrencyPipe, BrokenImageDirective, DateAgoPipe],
   templateUrl: './property-details.html',
   styleUrl: './property-details.css'
 })
 export class PropertyDetails implements OnInit {
-  property: any = null;
+  property: Property | null = null;
   loading = true;
-  error = '';
   inquiryMessage = '';
   showInquiryForm = false;
-  inquirySuccess = false;
   isFavorite = false;
+  sendingInquiry = false;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private apiService: ApiService,
+    private toastService: ToastService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -39,38 +43,33 @@ export class PropertyDetails implements OnInit {
       this.loadProperty(id);
     } else {
       this.loading = false;
-      this.error = 'No property ID provided';
+      this.router.navigate(['/properties']);
     }
   }
 
   loadProperty(id: string) {
-    console.log('Loading property:', id);
     this.loading = true;
-    this.error = '';
-    
-    // Set a timeout in case the request hangs
-    const timeoutId = setTimeout(() => {
-      if (this.loading) {
-        console.error('Request timeout');
-        this.error = 'Request timeout - please try again';
-        this.loading = false;
-      }
-    }, 10000); // 10 second timeout
     
     this.apiService.getProperty(id).subscribe({
       next: (data) => {
-        clearTimeout(timeoutId);
-        console.log('Property loaded:', data);
         this.property = data;
         this.loading = false;
       },
       error: (err) => {
-        clearTimeout(timeoutId);
-        console.error('Error loading property:', err);
-        this.error = err.status === 404 ? 'Property not found' : 'Failed to load property. Please check your connection.';
         this.loading = false;
+        console.error('Error loading property:', err);
       }
     });
+  }
+
+  get statusClass(): string {
+    if (!this.property) return '';
+    return this.property.available ? 'status-available' : 'status-unavailable';
+  }
+
+  get statusText(): string {
+    if (!this.property) return '';
+    return this.property.available ? 'Available' : 'Not Available';
   }
 
   isLoggedIn(): boolean {
@@ -83,6 +82,8 @@ export class PropertyDetails implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
+
+    if (!this.property) return;
 
     if (this.isFavorite) {
       this.apiService.removeFavorite(this.property._id).subscribe({
@@ -114,23 +115,29 @@ export class PropertyDetails implements OnInit {
       return;
     }
 
+    if (!this.property) return;
+
+    this.sendingInquiry = true;
+
     this.apiService.sendInquiry({
       property_id: this.property._id,
       message: this.inquiryMessage
     }).subscribe({
       next: () => {
-        this.inquirySuccess = true;
+        this.sendingInquiry = false;
         this.inquiryMessage = '';
-        setTimeout(() => {
-          this.inquirySuccess = false;
-          this.showInquiryForm = false;
-        }, 3000);
+        this.showInquiryForm = false;
+        this.toastService.success('Inquiry sent successfully!');
       },
-      error: (err) => console.error(err)
+      error: (err) => {
+        this.sendingInquiry = false;
+        console.error(err);
+        this.toastService.error('Failed to send inquiry');
+      }
     });
   }
 
   goBack() {
-    this.router.navigate(['/']);
+    this.router.navigate(['/properties']);
   }
 }

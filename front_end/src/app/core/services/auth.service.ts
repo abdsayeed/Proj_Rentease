@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
 import {
   LoginRequest,
   RegisterRequest,
@@ -18,6 +17,7 @@ import {
 export class AuthService {
   private readonly TOKEN_KEY = 'token';
   private readonly USER_KEY = 'user';
+  private readonly ROLE_KEY = 'role';
   private currentUserSubject = new BehaviorSubject<User | null>(this.getCurrentUser());
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -39,6 +39,11 @@ export class AuthService {
         if (response.access_token) {
           // Store token
           localStorage.setItem(this.TOKEN_KEY, response.access_token);
+          
+          // Store role directly from response for easy access
+          if (response.role) {
+            localStorage.setItem(this.ROLE_KEY, response.role);
+          }
           
           // Decode token to get user info
           const payload = this.decodeToken(response.access_token);
@@ -62,6 +67,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.ROLE_KEY);
     this.currentUserSubject.next(null);
   }
 

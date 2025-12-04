@@ -5,18 +5,20 @@
       <p>Sign in to your Rentease account</p>
     </div>
 
-    <form (ngSubmit)="onSubmit()" class="login-form">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
       <div class="form-group">
         <label for="email">Email Address</label>
         <input 
           type="email" 
           id="email" 
-          [(ngModel)]="email" 
-          name="email"
+          formControlName="email"
           placeholder="Enter your email"
           class="form-input"
-          required
+          [class.is-invalid]="isFieldInvalid('email')"
         />
+        <div *ngIf="isFieldInvalid('email')" class="invalid-feedback">
+          {{ getErrorMessage('email') }}
+        </div>
       </div>
 
       <div class="form-group">
@@ -25,11 +27,10 @@
           <input 
             [type]="showPassword ? 'text' : 'password'" 
             id="password" 
-            [(ngModel)]="password" 
-            name="password"
+            formControlName="password"
             placeholder="Enter your password"
             class="form-input"
-            required
+            [class.is-invalid]="isFieldInvalid('password')"
           />
           <button 
             type="button" 
@@ -39,16 +40,15 @@
             {{showPassword ? '👁️' : '👁️‍🗨️'}}
           </button>
         </div>
-      </div>
-
-      <div *ngIf="error" class="error-message">
-        {{error}}
+        <div *ngIf="isFieldInvalid('password')" class="invalid-feedback">
+          {{ getErrorMessage('password') }}
+        </div>
       </div>
 
       <button 
         type="submit" 
         class="submit-btn" 
-        [disabled]="loading"
+        [disabled]="loading || loginForm.invalid"
       >
         <span *ngIf="!loading">Sign In</span>
         <span *ngIf="loading" class="loading-spinner">Signing in...</span>

@@ -10,18 +10,20 @@
       <p>Redirecting to login...</p>
     </div>
 
-    <form *ngIf="!success" (ngSubmit)="onSubmit()" class="register-form">
+    <form *ngIf="!success" [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
       <div class="form-group">
         <label for="email">Email Address</label>
         <input 
           type="email" 
           id="email" 
-          [(ngModel)]="email" 
-          name="email"
+          formControlName="email"
           placeholder="Enter your email"
           class="form-input"
-          required
+          [class.is-invalid]="isFieldInvalid('email')"
         />
+        <div *ngIf="isFieldInvalid('email')" class="invalid-feedback">
+          {{ getErrorMessage('email') }}
+        </div>
       </div>
 
       <div class="form-group">
@@ -30,11 +32,10 @@
           <input 
             [type]="showPassword ? 'text' : 'password'" 
             id="password" 
-            [(ngModel)]="password" 
-            name="password"
-            placeholder="Create a password"
+            formControlName="password"
+            placeholder="Create a password (min 6 characters)"
             class="form-input"
-            required
+            [class.is-invalid]="isFieldInvalid('password')"
           />
           <button 
             type="button" 
@@ -44,6 +45,9 @@
             {{showPassword ? '👁️' : '👁️‍🗨️'}}
           </button>
         </div>
+        <div *ngIf="isFieldInvalid('password')" class="invalid-feedback">
+          {{ getErrorMessage('password') }}
+        </div>
       </div>
 
       <div class="form-group">
@@ -51,20 +55,24 @@
         <input 
           [type]="showPassword ? 'text' : 'password'" 
           id="confirmPassword" 
-          [(ngModel)]="confirmPassword" 
-          name="confirmPassword"
+          formControlName="confirmPassword"
           placeholder="Confirm your password"
           class="form-input"
-          required
+          [class.is-invalid]="isFieldInvalid('confirmPassword') || (confirmPassword?.touched && !passwordsMatch)"
         />
+        <div *ngIf="isFieldInvalid('confirmPassword')" class="invalid-feedback">
+          {{ getErrorMessage('confirmPassword') }}
+        </div>
+        <div *ngIf="confirmPassword?.touched && !passwordsMatch" class="invalid-feedback">
+          Passwords do not match
+        </div>
       </div>
 
       <div class="form-group">
         <label for="role">I want to...</label>
         <select 
           id="role" 
-          [(ngModel)]="role" 
-          name="role"
+          formControlName="role"
           class="form-input"
         >
           <option value="user">Find a property (User)</option>
@@ -72,14 +80,10 @@
         </select>
       </div>
 
-      <div *ngIf="error" class="error-message">
-        {{error}}
-      </div>
-
       <button 
         type="submit" 
         class="submit-btn" 
-        [disabled]="loading"
+        [disabled]="loading || registerForm.invalid"
       >
         <span *ngIf="!loading">Create Account</span>
         <span *ngIf="loading" class="loading-spinner">Creating account...</span>

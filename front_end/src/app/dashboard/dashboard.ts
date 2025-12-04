@@ -2,6 +2,7 @@ import { Component, OnInit, PLATFORM_ID, Inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { ApiService } from '../services/api.service';
+import { AuthService } from '../core/services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -28,6 +29,7 @@ export class Dashboard implements OnInit {
 
   constructor(
     private apiService: ApiService, 
+    private authService: AuthService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
@@ -38,9 +40,10 @@ export class Dashboard implements OnInit {
       return;
     }
     
-    this.role = localStorage.getItem('role') || 'user';
+    // Use AuthService for role detection
+    this.role = this.authService.getUserRole() || 'user';
     
-    if (!this.isLoggedIn()) {
+    if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']);
       return;
     }
@@ -49,8 +52,7 @@ export class Dashboard implements OnInit {
   }
 
   isLoggedIn(): boolean {
-    if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem('token');
+    return this.authService.isAuthenticated();
   }
 
   loadDashboardData() {
@@ -131,24 +133,8 @@ export class Dashboard implements OnInit {
   }
 
   logout() {
-    this.apiService.logout().subscribe({
-      next: () => {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-          localStorage.removeItem('role');
-          localStorage.removeItem('user');
-        }
-        this.router.navigate(['/login']);
-      },
-      error: () => {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-          localStorage.removeItem('role');
-          localStorage.removeItem('user');
-        }
-        this.router.navigate(['/login']);
-      }
-    });
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   goToHome() {
@@ -164,6 +150,6 @@ export class Dashboard implements OnInit {
   }
 
   viewProperty(id: string) {
-    this.router.navigate(['/property', id]);
+    this.router.navigate(['/properties', id]);
   }
 }

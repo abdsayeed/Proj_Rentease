@@ -1,6 +1,17 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, timeout, catchError, throwError } from 'rxjs';
+import { 
+  Property, 
+  Favorite, 
+  Inquiry, 
+  Statistics, 
+  PropertyFilters,
+  AuthResponse,
+  RegisterResponse,
+  RegisterRequest,
+  LoginRequest
+} from '../core/models';
 
 @Injectable({
   providedIn: 'root'
@@ -11,39 +22,29 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  private getHeaders(): HttpHeaders {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : ''
-    });
-  }
-
   // Auth
-  register(data: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/register`, data);
+  register(data: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(`${this.baseUrl}/auth/register`, data);
   }
 
-  login(data: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/login`, data);
+  login(data: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, data);
   }
 
   logout(): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/logout`, {}, { headers: this.getHeaders() });
+    return this.http.post(`${this.baseUrl}/auth/logout`, {});
   }
 
   // Properties
-  getProperties(filters?: any): Observable<any> {
-    let url = `${this.baseUrl}/api/v1/properties/`;
+  getProperties(filters?: PropertyFilters): Observable<Property[]> {
+    let params = new HttpParams();
     if (filters) {
-      const params = new URLSearchParams(filters).toString();
-      url += `?${params}`;
+      if (filters.district) params = params.set('district', filters.district);
+      if (filters.type) params = params.set('type', filters.type);
+      if (filters.price_min) params = params.set('price_min', filters.price_min.toString());
+      if (filters.price_max) params = params.set('price_max', filters.price_max.toString());
     }
-    return this.http.get(url);
-  }
-
-  getProperty(id: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/api/v1/properties/${id}`).pipe(
+    return this.http.get<Property[]>(`${this.baseUrl}/api/v1/properties/`, { params }).pipe(
       timeout(this.requestTimeout),
       catchError(err => {
         console.error('API Error:', err);
@@ -52,13 +53,23 @@ export class ApiService {
     );
   }
 
-  addProperty(data: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/v1/properties/`, data);
+  getProperty(id: string): Observable<Property> {
+    return this.http.get<Property>(`${this.baseUrl}/api/v1/properties/${id}`).pipe(
+      timeout(this.requestTimeout),
+      catchError(err => {
+        console.error('API Error:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  addProperty(data: Partial<Property>): Observable<Property> {
+    return this.http.post<Property>(`${this.baseUrl}/api/v1/properties/`, data);
   }
 
   // Agent
-  getMyProperties(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/api/v1/agent/properties`, { headers: this.getHeaders() }).pipe(
+  getMyProperties(): Observable<Property[]> {
+    return this.http.get<Property[]>(`${this.baseUrl}/api/v1/agent/properties`).pipe(
       timeout(this.requestTimeout),
       catchError(err => {
         console.error('API Error:', err);
@@ -67,29 +78,29 @@ export class ApiService {
     );
   }
 
-  getAgentProperties(): Observable<any> {
+  getAgentProperties(): Observable<Property[]> {
     return this.getMyProperties();
   }
 
-  createProperty(data: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/v1/agent/properties`, data, { headers: this.getHeaders() });
+  createProperty(data: Partial<Property>): Observable<Property> {
+    return this.http.post<Property>(`${this.baseUrl}/api/v1/agent/properties`, data);
   }
 
-  createAgentProperty(data: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/v1/agent/properties`, data, { headers: this.getHeaders() });
+  createAgentProperty(data: Partial<Property>): Observable<Property> {
+    return this.http.post<Property>(`${this.baseUrl}/api/v1/agent/properties`, data);
   }
 
-  updateProperty(id: string, data: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/api/v1/agent/properties/${id}`, data, { headers: this.getHeaders() });
+  updateProperty(id: string, data: Partial<Property>): Observable<Property> {
+    return this.http.put<Property>(`${this.baseUrl}/api/v1/agent/properties/${id}`, data);
   }
 
-  deleteProperty(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/api/v1/agent/properties/${id}`, { headers: this.getHeaders() });
+  deleteProperty(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/v1/agent/properties/${id}`);
   }
 
   // User
-  getFavorites(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/api/v1/users/favorites`, { headers: this.getHeaders() }).pipe(
+  getFavorites(): Observable<Favorite[]> {
+    return this.http.get<Favorite[]>(`${this.baseUrl}/api/v1/users/favorites`).pipe(
       timeout(this.requestTimeout),
       catchError(err => {
         console.error('API Error:', err);
@@ -98,25 +109,25 @@ export class ApiService {
     );
   }
 
-  addFavorite(propertyId: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/v1/users/favorites`, { property_id: propertyId }, { headers: this.getHeaders() });
+  addFavorite(propertyId: string): Observable<Favorite> {
+    return this.http.post<Favorite>(`${this.baseUrl}/api/v1/users/favorites`, { property_id: propertyId });
   }
 
-  removeFavorite(propertyId: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/api/v1/users/favorites/${propertyId}`, { headers: this.getHeaders() });
+  removeFavorite(propertyId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/v1/users/favorites/${propertyId}`);
   }
 
-  sendInquiry(data: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/v1/users/inquiries`, data, { headers: this.getHeaders() });
+  sendInquiry(data: Partial<Inquiry>): Observable<Inquiry> {
+    return this.http.post<Inquiry>(`${this.baseUrl}/api/v1/users/inquiries`, data);
   }
 
-  getInquiries(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/api/v1/users/inquiries`, { headers: this.getHeaders() });
+  getInquiries(): Observable<Inquiry[]> {
+    return this.http.get<Inquiry[]>(`${this.baseUrl}/api/v1/users/inquiries`);
   }
 
   // Admin
-  getAllUsers(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/api/v1/admin/users`, { headers: this.getHeaders() }).pipe(
+  getAllUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/api/v1/admin/users`).pipe(
       timeout(this.requestTimeout),
       catchError(err => {
         console.error('API Error:', err);
@@ -125,8 +136,8 @@ export class ApiService {
     );
   }
 
-  getStatistics(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/api/v1/admin/statistics`, { headers: this.getHeaders() }).pipe(
+  getStatistics(): Observable<Statistics> {
+    return this.http.get<Statistics>(`${this.baseUrl}/api/v1/admin/statistics`).pipe(
       timeout(this.requestTimeout),
       catchError(err => {
         console.error('API Error:', err);
@@ -136,11 +147,11 @@ export class ApiService {
   }
 
   updateUserRole(userId: string, role: string): Observable<any> {
-    return this.http.put(`${this.baseUrl}/api/v1/admin/users/${userId}/role`, { role }, { headers: this.getHeaders() });
+    return this.http.put(`${this.baseUrl}/api/v1/admin/users/${userId}/role`, { role });
   }
 
-  getAllProperties(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/api/v1/admin/properties`, { headers: this.getHeaders() }).pipe(
+  getAllProperties(): Observable<Property[]> {
+    return this.http.get<Property[]>(`${this.baseUrl}/api/v1/admin/properties`).pipe(
       timeout(this.requestTimeout),
       catchError(err => {
         console.error('API Error:', err);
@@ -149,7 +160,7 @@ export class ApiService {
     );
   }
 
-  adminDeleteProperty(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/api/v1/admin/properties/${id}`, { headers: this.getHeaders() });
+  adminDeleteProperty(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/v1/admin/properties/${id}`);
   }
 }

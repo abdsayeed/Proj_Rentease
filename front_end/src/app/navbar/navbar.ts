@@ -1,6 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { Subscription, filter } from 'rxjs';
+import { AuthService } from '../core/services/auth.service';
+import { User } from '../core/models';
 
 @Component({
   selector: 'app-navbar',
@@ -9,33 +12,62 @@ import { Router, RouterModule } from '@angular/router';
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })
-export class Navbar {
+export class Navbar implements OnInit, OnDestroy {
   menuOpen = false;
+  currentUser: User | null = null;
+  private userSubscription?: Subscription;
+  private routerSubscription?: Subscription;
   
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
   
-  isLoggedIn(): boolean {
-    if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem('token');
+  ngOnInit(): void {
+    // Subscribe to current user changes
+    this.userSubscription = this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+    });
+
+    // Close menu on route change
+    this.routerSubscription = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.menuOpen = false;
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.userSubscription) {
+      this.userSubscription.unsubscribe();
+    }
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
   }
   
-  getRole(): string {
-    if (typeof window === 'undefined') return '';
-    const role = localStorage.getItem('role') || '';
-    console.log('Navbar - Current role:', role);
-    return role;
+  get isLoggedIn(): boolean {
+    return this.authService.isAuthenticated();
   }
   
-  toggleMenu() {
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
+  get isAgent(): boolean {
+    return this.authService.isAgent();
+  }
+
+  get userRole(): string {
+    return this.currentUser?.role || '';
+  }
+  
+  toggleMenu(): void {
     this.menuOpen = !this.menuOpen;
   }
   
-  logout() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('role');
-      localStorage.removeItem('user');
-    }
-    this.router.navigate(['/']);
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/properties']);
   }
 }

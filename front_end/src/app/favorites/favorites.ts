@@ -2,6 +2,7 @@ import { Component, OnInit, PLATFORM_ID, Inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { ApiService } from '../services/api.service';
+import { AuthService } from '../core/services/auth.service';
 
 @Component({
   selector: 'app-favorites',
@@ -17,7 +18,8 @@ export class Favorites implements OnInit {
   error = '';
 
   constructor(
-    private apiService: ApiService, 
+    private apiService: ApiService,
+    private authService: AuthService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
@@ -28,7 +30,7 @@ export class Favorites implements OnInit {
       return;
     }
     
-    if (!this.isLoggedIn()) {
+    if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']);
       return;
     }
@@ -36,8 +38,7 @@ export class Favorites implements OnInit {
   }
 
   isLoggedIn(): boolean {
-    if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem('token');
+    return this.authService.isAuthenticated();
   }
 
   loadFavorites() {
@@ -87,7 +88,7 @@ export class Favorites implements OnInit {
   }
 
   viewProperty(id: string) {
-    this.router.navigate(['/property', id]);
+    this.router.navigate(['/properties', id]);
   }
 
   goBack() {

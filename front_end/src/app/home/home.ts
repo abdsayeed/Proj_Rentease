@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../services/api.service';
+import { PropertyFilters, Property } from '../core/models';
 
 @Component({
   selector: 'app-home',
@@ -12,10 +13,9 @@ import { ApiService } from '../services/api.service';
   styleUrl: './home.css',
 })
 export class Home implements OnInit {
-  properties: any[] = [];
-  filteredProperties: any[] = [];
+  properties: Property[] = [];
+  filteredProperties: Property[] = [];
   loading = false;
-  error = '';
   
   // Filters
   searchQuery = '';
@@ -43,13 +43,13 @@ export class Home implements OnInit {
 
   loadProperties() {
     this.loading = true;
-    this.error = '';
     
-    const filters: any = {};
+    // Build filters object using PropertyFilters interface
+    const filters: PropertyFilters = {};
     if (this.selectedDistrict) filters.district = this.selectedDistrict;
     if (this.selectedType) filters.type = this.selectedType;
-    if (this.minPrice) filters.price_min = this.minPrice;
-    if (this.maxPrice) filters.price_max = this.maxPrice;
+    if (this.minPrice) filters.price_min = parseInt(this.minPrice);
+    if (this.maxPrice) filters.price_max = parseInt(this.maxPrice);
     
     this.apiService.getProperties(filters).subscribe({
       next: (data) => {
@@ -59,9 +59,8 @@ export class Home implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        this.error = 'Failed to load properties';
         this.loading = false;
-        console.error(err);
+        console.error('Error loading properties:', err);
       }
     });
   }
@@ -75,12 +74,17 @@ export class Home implements OnInit {
     const query = this.searchQuery.toLowerCase();
     this.filteredProperties = this.properties.filter(p => 
       p.title?.toLowerCase().includes(query) || 
-      p.location?.toLowerCase().includes(query)
+      p.location?.toLowerCase().includes(query) ||
+      p.description?.toLowerCase().includes(query)
     );
   }
 
+  onSearchChange() {
+    this.applySearch();
+  }
+
   viewDetails(propertyId: string) {
-    this.router.navigate(['/property', propertyId]);
+    this.router.navigate(['/properties', propertyId]);
   }
 
   clearFilters() {
@@ -90,6 +94,14 @@ export class Home implements OnInit {
     this.minPrice = '';
     this.maxPrice = '';
     this.loadProperties();
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.selectedDistrict || this.selectedType || this.minPrice || this.maxPrice);
+  }
+
+  get noResults(): boolean {
+    return !this.loading && this.filteredProperties.length === 0;
   }
 
   isLoggedIn(): boolean {

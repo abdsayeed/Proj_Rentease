@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../services/api.service';
+import { AuthService } from '../core/services/auth.service';
 
 @Component({
   selector: 'app-add-property',
@@ -27,17 +28,20 @@ export class AddProperty implements OnInit {
   propertyTypes = ['apartment', 'house', 'flat', 'studio', 'penthouse', 'bungalow', 'cottage'];
   cities = ['London', 'Manchester', 'Birmingham', 'Leeds', 'Liverpool', 'Bristol', 'Edinburgh', 'Glasgow', 'Cardiff', 'Newcastle', 'Sheffield', 'Nottingham', 'Southampton', 'Leicester', 'Cambridge', 'Oxford'];
 
-  constructor(private apiService: ApiService, private router: Router) {}
+  constructor(
+    private apiService: ApiService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     if (typeof window === 'undefined') return;
-    const role = localStorage.getItem('role');
-    console.log('Add Property - Current role:', role);
     
-    // The agentGuard already protects this route, so we don't need to redirect
-    // Just log for debugging
-    if (role !== 'agent' && role !== 'admin') {
-      console.warn('User role is not agent or admin:', role);
+    // Check if user is agent or admin
+    if (!this.authService.isAgent()) {
+      console.warn('User is not an agent or admin, redirecting...');
+      this.router.navigate(['/properties']);
+      return;
     }
   }
 
