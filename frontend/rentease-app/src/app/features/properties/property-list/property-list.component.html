@@ -1,0 +1,139 @@
+
+    <div class="property-list-container">
+      <!-- Header -->
+      <div class="header">
+        <h1>Browse Properties</h1>
+        <p>Find your perfect rental home</p>
+      </div>
+
+      <!-- Search and Filters -->
+      <div class="search-section">
+        <div class="search-bar">
+          <input
+            type="text"
+            [formControl]="searchControl"
+            placeholder="Search by title, city, or description..."
+            class="search-input">
+          <span class="search-icon">🔍</span>
+        </div>
+
+        <div class="filters">
+          <select [formControl]="typeControl" class="filter-select">
+            <option value="">All Types</option>
+            <option [value]="PropertyType.APARTMENT">Apartment</option>
+            <option [value]="PropertyType.HOUSE">House</option>
+            <option [value]="PropertyType.CONDO">Condo</option>
+            <option [value]="PropertyType.STUDIO">Studio</option>
+            <option [value]="PropertyType.VILLA">Villa</option>
+          </select>
+
+          <select [formControl]="sortControl" class="filter-select">
+            <option value="created_at">Newest First</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Results Count -->
+      <div class="results-info">
+        <p>
+          Showing {{ paginatedProperties().length }} of {{ filteredProperties().length }} properties
+        </p>
+      </div>
+
+      <!-- Loading State -->
+      @if (loading()) {
+        <div class="property-grid">
+          <app-skeleton-loader variant="card" [repeat]="6" />
+        </div>
+      }
+
+      <!-- Properties Grid -->
+      @else if (paginatedProperties().length > 0) {
+        <div class="property-grid">
+          @for (property of paginatedProperties(); track property._id) {
+            <app-card [hoverable]="true" [hasHeader]="false" [hasFooter]="true">
+              <div body>
+                <!-- Property Image -->
+                <div class="property-image">
+                  @if (property.images && property.images.length > 0) {
+                    <img [src]="property.images[0]" [alt]="property.title">
+                  } @else {
+                    <div class="no-image">🏠</div>
+                  }
+                  <span class="property-type">{{ property.type }}</span>
+                </div>
+
+                <!-- Property Details -->
+                <div class="property-content">
+                  <h3 class="property-title">{{ property.title }}</h3>
+                  <p class="property-location">
+                    📍 {{ property.location.city }}, {{ property.location.state }}
+                  </p>
+                  <p class="property-description">
+                    {{ property.description | slice:0:100 }}...
+                  </p>
+
+                  <div class="property-features">
+                    <span class="feature">🛏️ {{ property.bedrooms }} Beds</span>
+                    <span class="feature">🚿 {{ property.bathrooms }} Baths</span>
+                    <span class="feature">📐 {{ property.square_feet }} sqft</span>
+                  </div>
+
+                  <div class="property-price">
+                    <span class="price">\${{ property.price }}</span>
+                    <span class="period">/month</span>
+                  </div>
+                </div>
+              </div>
+
+              <div footer>
+                <app-button
+                  variant="primary"
+                  size="md"
+                  [routerLink]="['/properties', property._id]"
+                  class="view-btn">
+                  View Details
+                </app-button>
+              </div>
+            </app-card>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <app-button
+              variant="outline"
+              size="sm"
+              [disabled]="currentPage() === 1"
+              (clicked)="previousPage()">
+              ← Previous
+            </app-button>
+
+            <span class="page-info">
+              Page {{ currentPage() }} of {{ totalPages() }}
+            </span>
+
+            <app-button
+              variant="outline"
+              size="sm"
+              [disabled]="currentPage() === totalPages()"
+              (clicked)="nextPage()">
+              Next →
+            </app-button>
+          </div>
+        }
+      }
+
+      <!-- Empty State -->
+      @else {
+        <div class="empty-state">
+          <span class="empty-icon">🔍</span>
+          <h2>No properties found</h2>
+          <p>Try adjusting your search or filters</p>
+        </div>
+      }
+    </div>
+  

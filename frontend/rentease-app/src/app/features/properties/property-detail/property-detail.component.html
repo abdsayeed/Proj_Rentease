@@ -1,0 +1,282 @@
+
+    <div class="property-detail-container">
+      @if (loading()) {
+        <div class="loading-state">
+          <app-skeleton-loader variant="rectangular" [height]="400" />
+          <app-skeleton-loader variant="text" [repeat]="5" />
+        </div>
+      } @else if (errorMessage()) {
+        <app-card>
+          <div class="error-message">
+            <h2>Error Loading Property</h2>
+            <p>{{ errorMessage() }}</p>
+            <app-button variant="primary" [routerLink]="['/properties']">
+              Back to Properties
+            </app-button>
+          </div>
+        </app-card>
+      } @else if (property()) {
+        <!-- Image Gallery -->
+        <div class="image-gallery">
+          <div class="main-image">
+            <img [src]="currentImage()" [alt]="property()!.title" />
+            @if (property()!.images.length > 1) {
+              <button class="nav-btn prev" (click)="previousImage()" aria-label="Previous image">
+                <span>&lt;</span>
+              </button>
+              <button class="nav-btn next" (click)="nextImage()" aria-label="Next image">
+                <span>&gt;</span>
+              </button>
+            }
+            <div class="image-counter">
+              {{ currentImageIndex() + 1 }} / {{ property()!.images.length }}
+            </div>
+          </div>
+          
+          @if (property()!.images.length > 1) {
+            <div class="thumbnail-strip">
+              @for (image of property()!.images; track image; let i = $index) {
+                <img 
+                  [src]="image" 
+                  [alt]="'Thumbnail ' + (i + 1)"
+                  [class.active]="i === currentImageIndex()"
+                  (click)="selectImage(i)"
+                />
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Property Info -->
+        <div class="property-content">
+          <div class="main-info">
+            <app-card>
+              <div header>
+                <div class="property-header">
+                  <div>
+                    <h1>{{ property()!.title }}</h1>
+                    <p class="location">
+                      <span class="icon">📍</span>
+                      {{ property()!.location.address }}, {{ property()!.location.city }}, 
+                      {{ property()!.location.state }} {{ property()!.location.zip_code }}
+                    </p>
+                  </div>
+                  @if (authService.isAuthenticated()) {
+                    <app-button 
+                      [variant]="isFavorite() ? 'primary' : 'outline'"
+                      (clicked)="toggleFavorite()"
+                      [loading]="favoriteLoading()"
+                    >
+                      {{ isFavorite() ? '❤️ Saved' : '🤍 Save' }}
+                    </app-button>
+                  }
+                </div>
+              </div>
+
+              <div body>
+                <div class="property-stats">
+                  <div class="stat">
+                    <span class="label">Type</span>
+                    <span class="value">{{ property()!.type }}</span>
+                  </div>
+                  <div class="stat">
+                    <span class="label">Bedrooms</span>
+                    <span class="value">{{ property()!.bedrooms }}</span>
+                  </div>
+                  <div class="stat">
+                    <span class="label">Bathrooms</span>
+                    <span class="value">{{ property()!.bathrooms }}</span>
+                  </div>
+                  <div class="stat">
+                    <span class="label">Square Feet</span>
+                    <span class="value">{{ property()!.square_feet }}</span>
+                  </div>
+                  <div class="stat">
+                    <span class="label">Status</span>
+                    <span class="value status" [class]="property()!.status.toLowerCase()">
+                      {{ property()!.status }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="price-section">
+                  <h2 class="price">£{{ property()!.price }} <span class="per-night">/ month</span></h2>
+                  @if (hasValidRating()) {
+                    <div class="rating">
+                  <span class="stars">⭐ {{ property()!.ratings!.average_rating.toFixed(1) }}</span>
+                  <span class="reviews">({{ property()!.ratings!.total_reviews }} reviews)</span>
+                    </div>
+                  }
+                </div>
+
+                <div class="description">
+                  <h3>Description</h3>
+                  <p>{{ property()!.description }}</p>
+                </div>
+
+                <div class="amenities">
+                  <h3>Amenities</h3>
+                  <div class="amenities-grid">
+                    @if (property()!.amenities.wifi) {
+                      <div class="amenity">📶 WiFi</div>
+                    }
+                    @if (property()!.amenities.parking) {
+                      <div class="amenity">🚗 Parking</div>
+                    }
+                    @if (property()!.amenities.pool) {
+                      <div class="amenity">🏊 Pool</div>
+                    }
+                    @if (property()!.amenities.gym) {
+                      <div class="amenity">💪 Gym</div>
+                    }
+                    @if (property()!.amenities.kitchen) {
+                      <div class="amenity">🍳 Kitchen</div>
+                    }
+                    @if (property()!.amenities.air_conditioning) {
+                      <div class="amenity">❄️ A/C</div>
+                    }
+                    @if (property()!.amenities.heating) {
+                      <div class="amenity">🔥 Heating</div>
+                    }
+                    @if (property()!.amenities.washer) {
+                      <div class="amenity">🧺 Washer</div>
+                    }
+                    @if (property()!.amenities.pet_friendly) {
+                      <div class="amenity">🐾 Pet Friendly</div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </app-card>
+          </div>
+
+          <!-- Rental Application Sidebar -->
+          <div class="booking-sidebar">
+            <app-card>
+              <div header>
+                <h3>Rent This Property</h3>
+              </div>
+              <div body>
+                @if (property()!.status === PropertyStatus.AVAILABLE) {
+                  <form class="booking-form" (ngSubmit)="checkAvailability()">
+                    <div class="form-group">
+                      <label for="check-in">Move-in Date</label>
+                      <input 
+                        type="date" 
+                        id="check-in" 
+                        [(ngModel)]="checkInDate"
+                        name="checkInDate"
+                        [min]="minDate"
+                        required
+                      />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="check-out">Lease End Date</label>
+                      <input 
+                        type="date" 
+                        id="check-out" 
+                        [(ngModel)]="checkOutDate"
+                        name="checkOutDate"
+                        [min]="checkInDate || minDate"
+                        required
+                      />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="guests">Number of Tenants</label>
+                      <input 
+                        type="number" 
+                        id="guests" 
+                        [(ngModel)]="numberOfGuests"
+                        name="numberOfGuests"
+                        min="1"
+                        max="10"
+                        required
+                      />
+                    </div>
+
+                    @if (checkInDate && checkOutDate) {
+                      <div class="price-breakdown">
+                        <div class="row">
+                          <span>Monthly Rent</span>
+                          <span>£{{ property()!.price }}</span>
+                        </div>
+                        <div class="row">
+                          <span>Security Deposit</span>
+                          <span>£{{ property()!.price }}</span>
+                        </div>
+                        <div class="row">
+                          <span>Lease Duration</span>
+                          <span>{{ getLeaseDays() }} days (~{{ getLeaseMonths() }} months)</span>
+                        </div>
+                        <div class="row total">
+                          <strong>Total Due at Move-in</strong>
+                          <strong>£{{ getTotalDueAtMoveIn() }}</strong>
+                        </div>
+                      </div>
+                    }
+
+                    @if (availabilityMessage()) {
+                      <div class="availability-message" [class.available]="isAvailable()" [class.unavailable]="!isAvailable()">
+                        {{ availabilityMessage() }}
+                      </div>
+                    }
+
+                    @if (!authService.isAuthenticated()) {
+                      <app-button 
+                        type="button"
+                        variant="primary" 
+                        [routerLink]="['/auth/login']"
+                        [queryParams]="{ returnUrl: '/properties/' + property()!._id }"
+                      >
+                        Login to Book
+                      </app-button>
+                    } @else {
+                      <app-button 
+                        type="submit"
+                        variant="primary" 
+                        [loading]="checkingAvailability()"
+                        [disabled]="!checkInDate || !checkOutDate || !numberOfGuests"
+                      >
+                        Check Availability
+                      </app-button>
+
+                      @if (isAvailable()) {
+                        <app-button 
+                          type="button"
+                          variant="primary" 
+                          (clicked)="proceedToBooking()"
+                        >
+                          Apply to Rent
+                        </app-button>
+                      }
+                    }
+                  </form>
+                } @else {
+                  <div class="unavailable-notice">
+                    <p>This property is currently {{ property()!.status.toLowerCase() }}.</p>
+                  </div>
+                }
+              </div>
+            </app-card>
+
+            <!-- Agent Info -->
+            @if (property()!.agent_id) {
+              <app-card>
+                <div header>
+                  <h3>Contact Agent</h3>
+                </div>
+                <div body>
+                  <p>For inquiries about this property, please contact the listing agent.</p>
+                  <app-button variant="outline" type="button">
+                    📧 Contact Agent
+                  </app-button>
+                </div>
+              </app-card>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  

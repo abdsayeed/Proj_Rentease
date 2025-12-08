@@ -1,0 +1,71 @@
+<div class="auth-container">
+  <app-card [hasFooter]="false">
+    <div header>
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Login to your RentEase account</p>
+    </div>
+
+    <div body>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="Enter your email"
+            [class.error]="emailControl?.invalid && emailControl?.touched">
+          @if (emailControl?.invalid && emailControl?.touched) {
+            <span class="error-message">
+              @if (emailControl?.hasError('required')) {
+                Email is required
+              }
+              @if (emailControl?.hasError('email')) {
+                Invalid email format
+              }
+            </span>
+          }
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            placeholder="Enter your password"
+            [class.error]="passwordControl?.invalid && passwordControl?.touched">
+          @if (passwordControl?.invalid && passwordControl?.touched) {
+            <span class="error-message">Password is required</span>
+          }
+        </div>
+
+        <!-- Error Message -->
+        @if (errorMessage()) {
+          <div class="alert alert-error">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <!-- Submit Button -->
+        <app-button
+          type="submit"
+          variant="primary"
+          size="lg"
+          [loading]="loading()"
+          [disabled]="loginForm.invalid"
+          class="submit-btn">
+          Login
+        </app-button>
+
+        <!-- Register Link -->
+        <p class="auth-link">
+          Don't have an account?
+          <a routerLink="/auth/register">Sign up here</a>
+        </p>
+      </form>
+    </div>
+  </app-card>
+</div>

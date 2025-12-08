@@ -1,0 +1,337 @@
+
+    <div class="admin-dashboard-container">
+      <div class="dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <p>Platform management and analytics</p>
+      </div>
+
+      <!-- Statistics Overview -->
+      <div class="stats-section">
+        @if (loadingStats()) {
+          <div class="stats-grid">
+            @for (i of [1,2,3,4]; track i) {
+              <app-card>
+                <div body>
+                  <app-skeleton-loader variant="text" [repeat]="3" />
+                </div>
+              </app-card>
+            }
+          </div>
+        } @else {
+          <div class="stats-grid">
+            <app-card [hoverable]="false">
+              <div body>
+                <div class="stat-card">
+                  <div class="stat-icon">👥</div>
+                  <div class="stat-content">
+                    <div class="stat-value">{{ totalUsers() }}</div>
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-breakdown">
+                      <span>{{ customerCount() }} Customers</span>
+                      <span>{{ agentCount() }} Agents</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </app-card>
+
+            <app-card [hoverable]="false">
+              <div body>
+                <div class="stat-card">
+                  <div class="stat-icon">🏠</div>
+                  <div class="stat-content">
+                    <div class="stat-value">{{ totalProperties() }}</div>
+                    <div class="stat-label">Total Properties</div>
+                    <div class="stat-breakdown">
+                      <span>{{ availableProperties() }} Available</span>
+                      <span>{{ rentedProperties() }} Rented</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </app-card>
+
+            <app-card [hoverable]="false">
+              <div body>
+                <div class="stat-card">
+                  <div class="stat-icon">📅</div>
+                  <div class="stat-content">
+                    <div class="stat-value">{{ totalBookings() }}</div>
+                    <div class="stat-label">Total Bookings</div>
+                    <div class="stat-breakdown">
+                      <span>{{ confirmedBookings() }} Confirmed</span>
+                      <span>{{ pendingBookings() }} Pending</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </app-card>
+
+            <app-card [hoverable]="false">
+              <div body>
+                <div class="stat-card">
+                  <div class="stat-icon">💰</div>
+                  <div class="stat-content">
+                    <div class="stat-value">\${{ totalRevenue() }}</div>
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="stat-breakdown">
+                      <span>This Month: \${{ monthlyRevenue() }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </app-card>
+          </div>
+        }
+      </div>
+
+      <!-- Tabs for Different Management Sections -->
+      <div class="management-section">
+        <div class="tabs">
+          <button 
+            class="tab" 
+            [class.active]="activeTab() === 'users'"
+            (click)="activeTab.set('users')"
+          >
+            Users
+          </button>
+          <button 
+            class="tab" 
+            [class.active]="activeTab() === 'properties'"
+            (click)="activeTab.set('properties')"
+          >
+            Properties
+          </button>
+          <button 
+            class="tab" 
+            [class.active]="activeTab() === 'bookings'"
+            (click)="activeTab.set('bookings')"
+          >
+            Bookings
+          </button>
+        </div>
+
+        <app-card>
+          <div body>
+            <!-- Users Tab -->
+            @if (activeTab() === 'users') {
+              <div class="tab-content">
+                <div class="tab-header">
+                  <h2>User Management</h2>
+                  <div class="search-box">
+                    <input 
+                      type="text" 
+                      placeholder="Search users..."
+                      [(ngModel)]="userSearchQuery"
+                    />
+                  </div>
+                </div>
+
+                @if (loadingUsers()) {
+                  <app-skeleton-loader variant="list" [repeat]="5" />
+                } @else if (users().length === 0) {
+                  <div class="empty-state">
+                    <p>No users found.</p>
+                  </div>
+                } @else {
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Phone</th>
+                          <th>Role</th>
+                          <th>Joined</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (user of filteredUsers(); track user._id) {
+                          <tr>
+                            <td>{{ user.first_name }} {{ user.last_name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.phone || 'N/A' }}</td>
+                            <td>
+                              <span class="badge" [class]="user.role.toLowerCase()">
+                                {{ user.role }}
+                              </span>
+                            </td>
+                            <td>{{ user.created_at | date: 'mediumDate' }}</td>
+                            <td>
+                              <div class="action-buttons">
+                                @if (user.role !== UserRole.ADMIN) {
+                                  <select 
+                                    (change)="changeUserRole(user._id!, $any($event))"
+                                    class="role-select"
+                                  >
+                                    <option value="">Change Role</option>
+                                    <option value="CUSTOMER">Customer</option>
+                                    <option value="AGENT">Agent</option>
+                                    <option value="ADMIN">Admin</option>
+                                  </select>
+                                  <app-button 
+                                    variant="outline" 
+                                    size="sm"
+                                    (clicked)="confirmDeleteUser(user)"
+                                  >
+                                    Delete
+                                  </app-button>
+                                }
+                              </div>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Properties Tab -->
+            @if (activeTab() === 'properties') {
+              <div class="tab-content">
+                <div class="tab-header">
+                  <h2>Property Management</h2>
+                </div>
+
+                @if (loadingProperties()) {
+                  <app-skeleton-loader variant="card" [repeat]="4" />
+                } @else if (properties().length === 0) {
+                  <div class="empty-state">
+                    <p>No properties found.</p>
+                  </div>
+                } @else {
+                  <div class="properties-grid">
+                    @for (property of properties(); track property._id) {
+                      <div class="property-card">
+                        <img [src]="property.images[0]" [alt]="property.title" class="property-image" />
+                        <div class="property-content">
+                          <h3>{{ property.title }}</h3>
+                          <p class="location">📍 {{ property.location.city }}, {{ property.location.state }}</p>
+                          <div class="property-details">
+                            <span>{{ property.bedrooms }} bed</span>
+                            <span>•</span>
+                            <span>{{ property.bathrooms }} bath</span>
+                            <span>•</span>
+                            <span>${{ property.price_per_night }}/night</span>
+                          </div>
+                          <div class="property-status">
+                            <span class="status-badge" [class]="property.status.toLowerCase()">
+                              {{ property.status }}
+                            </span>
+                          </div>
+                          <div class="property-actions">
+                            <app-button 
+                              variant="outline" 
+                              size="sm"
+                              [routerLink]="['/properties', property._id]"
+                            >
+                              View
+                            </app-button>
+                            <app-button 
+                              variant="outline" 
+                              size="sm"
+                              (clicked)="confirmDeleteProperty(property)"
+                            >
+                              Delete
+                            </app-button>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Bookings Tab -->
+            @if (activeTab() === 'bookings') {
+              <div class="tab-content">
+                <div class="tab-header">
+                  <h2>Booking Management</h2>
+                </div>
+
+                @if (loadingBookings()) {
+                  <app-skeleton-loader variant="list" [repeat]="5" />
+                } @else if (bookings().length === 0) {
+                  <div class="empty-state">
+                    <p>No bookings found.</p>
+                  </div>
+                } @else {
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>Booking ID</th>
+                          <th>Check-in</th>
+                          <th>Check-out</th>
+                          <th>Guests</th>
+                          <th>Total Price</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (booking of bookings(); track booking._id) {
+                          <tr>
+                            <td class="booking-id">{{ booking._id?.slice(-8) }}</td>
+                            <td>{{ booking.check_in_date | date: 'mediumDate' }}</td>
+                            <td>{{ booking.check_out_date | date: 'mediumDate' }}</td>
+                            <td>{{ booking.number_of_guests }}</td>
+                            <td>\${{ booking.total_price }}</td>
+                            <td>
+                              <span class="status-badge" [class]="booking.status.toLowerCase()">
+                                {{ booking.status }}
+                              </span>
+                            </td>
+                            <td>
+                              @if (booking.status !== BookingStatus.CANCELLED && booking.status !== BookingStatus.COMPLETED) {
+                                <app-button 
+                                  variant="outline" 
+                                  size="sm"
+                                  (clicked)="confirmCancelBooking(booking)"
+                                >
+                                  Cancel
+                                </app-button>
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </app-card>
+      </div>
+
+      <!-- Confirmation Modal -->
+      @if (showConfirmModal()) {
+        <div class="modal-overlay" (click)="showConfirmModal.set(false)">
+          <div class="modal" (click)="$event.stopPropagation()">
+            <h3>{{ confirmModalTitle() }}</h3>
+            <p>{{ confirmModalMessage() }}</p>
+            <div class="modal-actions">
+              <app-button 
+                variant="outline" 
+                (clicked)="showConfirmModal.set(false)"
+              >
+                Cancel
+              </app-button>
+              <app-button 
+                variant="primary" 
+                (clicked)="executeConfirmAction()"
+                [loading]="actionInProgress()"
+              >
+                Confirm
+              </app-button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  

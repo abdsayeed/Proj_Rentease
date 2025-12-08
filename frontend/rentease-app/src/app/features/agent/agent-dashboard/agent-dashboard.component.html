@@ -1,0 +1,236 @@
+
+<div class="agent-dashboard">
+  <div class="dashboard-header">
+    <h1>🏠 Agent Dashboard</h1>
+    <p class="subtitle">Manage your rental properties</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button 
+      class="tab" 
+      [class.active]="activeTab() === 'properties'"
+      (click)="activeTab.set('properties'); showAddForm.set(false)"
+    >
+      📋 My Properties ({{ properties().length }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab() === 'add'"
+      (click)="openAddForm()"
+    >
+      ➕ {{ editingProperty() ? 'Edit Property' : 'Add New Property' }}
+    </button>
+  </div>
+
+  <!-- Properties List Tab -->
+  @if (activeTab() === 'properties') {
+    <div class="properties-section">
+      @if (loading()) {
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Loading your properties...</p>
+        </div>
+      } @else if (properties().length === 0) {
+        <app-card>
+          <div body class="empty-state">
+            <div class="empty-icon">🏘️</div>
+            <h3>No Properties Yet</h3>
+            <p>You haven't added any properties. Start by adding your first rental property!</p>
+            <app-button variant="primary" (clicked)="openAddForm()">
+              ➕ Add Your First Property
+            </app-button>
+          </div>
+        </app-card>
+      } @else {
+        <div class="properties-grid">
+          @for (property of properties(); track property._id) {
+            <app-card [hoverable]="true">
+              <div body>
+                <div class="property-card">
+                  <div class="property-header">
+                    <h3>{{ property.title }}</h3>
+                    <span class="status-badge" [class.available]="property.available" [class.unavailable]="!property.available">
+                      {{ property.available ? '✓ Available' : '✗ Unavailable' }}
+                    </span>
+                  </div>
+                  
+                  <div class="property-details">
+                    <div class="detail">
+                      <span class="label">💰 Monthly Rent:</span>
+                      <span class="value price">£{{ property.price }}</span>
+                    </div>
+                    <div class="detail">
+                      <span class="label">🏠 Type:</span>
+                      <span class="value">{{ getPropertyTypeLabel(property.property_type || property.type || 'apartment') }}</span>
+                    </div>
+                    @if (property.location) {
+                      <div class="detail">
+                        <span class="label">📍 Location:</span>
+                        <span class="value">
+                          {{ property.location.city || 'N/A' }}, {{ property.location.country || 'UK' }}
+                        </span>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="property-actions">
+                    <app-button variant="outline" (clicked)="editProperty(property)">
+                      ✏️ Edit
+                    </app-button>
+                    <app-button 
+                      [variant]="property.available ? 'outline' : 'primary'" 
+                      (clicked)="toggleAvailability(property)"
+                    >
+                      {{ property.available ? '🚫 Mark Unavailable' : '✓ Mark Available' }}
+                    </app-button>
+                    <app-button variant="outline" (clicked)="deleteProperty(property)">
+                      🗑️ Delete
+                    </app-button>
+                  </div>
+                </div>
+              </div>
+            </app-card>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Add/Edit Property Form Tab -->
+  @if (activeTab() === 'add') {
+    <div class="form-section">
+      <app-card>
+        <div header>
+          <h2>{{ editingProperty() ? '✏️ Edit Property' : '➕ Add New Property' }}</h2>
+        </div>
+        <div body>
+          <form [formGroup]="propertyForm" (ngSubmit)="saveProperty()">
+            <div class="form-grid">
+              <!-- Title -->
+              <div class="form-group full-width">
+                <label for="title">Property Title *</label>
+                <input 
+                  id="title"
+                  type="text" 
+                  formControlName="title"
+                  placeholder="e.g., Modern 2-Bedroom Apartment in City Center"
+                />
+                @if (propertyForm.get('title')?.invalid && propertyForm.get('title')?.touched) {
+                  <span class="error">Title is required (min 5 characters)</span>
+                }
+              </div>
+
+              <!-- Price -->
+              <div class="form-group">
+                <label for="price">Monthly Rent (£) *</label>
+                <input 
+                  id="price"
+                  type="number" 
+                  formControlName="price"
+                  placeholder="e.g., 1500"
+                  min="100"
+                />
+                @if (propertyForm.get('price')?.invalid && propertyForm.get('price')?.touched) {
+                  <span class="error">Price is required (min £100)</span>
+                }
+              </div>
+
+              <!-- Property Type -->
+              <div class="form-group">
+                <label for="property_type">Property Type *</label>
+                <select id="property_type" formControlName="property_type">
+                  <option value="apartment">Apartment</option>
+                  <option value="house">House</option>
+                  <option value="condo">Condo</option>
+                  <option value="townhouse">Townhouse</option>
+                  <option value="studio">Studio</option>
+                </select>
+              </div>
+
+              <!-- Availability -->
+              <div class="form-group">
+                <label for="available">Availability</label>
+                <select id="available" formControlName="available">
+                  <option [ngValue]="true">Available for Rent</option>
+                  <option [ngValue]="false">Not Available</option>
+                </select>
+              </div>
+
+              <!-- Location Group -->
+              <div class="form-group full-width" formGroupName="location">
+                <h3 class="section-title">📍 Location Details</h3>
+                
+                <div class="location-grid">
+                  <div class="form-group">
+                    <label for="address">Street Address *</label>
+                    <input 
+                      id="address"
+                      type="text" 
+                      formControlName="address"
+                      placeholder="e.g., 123 High Street"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="city">City *</label>
+                    <input 
+                      id="city"
+                      type="text" 
+                      formControlName="city"
+                      placeholder="e.g., London"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="state">County/State</label>
+                    <input 
+                      id="state"
+                      type="text" 
+                      formControlName="state"
+                      placeholder="e.g., Greater London"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="country">Country *</label>
+                    <input 
+                      id="country"
+                      type="text" 
+                      formControlName="country"
+                      placeholder="e.g., UK"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="zip_code">Postcode</label>
+                    <input 
+                      id="zip_code"
+                      type="text" 
+                      formControlName="zip_code"
+                      placeholder="e.g., SW1A 1AA"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <app-button type="button" variant="outline" (clicked)="cancelForm()">
+                Cancel
+              </app-button>
+              <app-button 
+                type="submit" 
+                variant="primary" 
+                [loading]="saving()"
+                [disabled]="propertyForm.invalid"
+              >
+                {{ editingProperty() ? 'Update Property' : 'Create Property' }}
+              </app-button>
+            </div>
+          </form>
+        </div>
+      </app-card>
+    </div>
+  }
+</div>

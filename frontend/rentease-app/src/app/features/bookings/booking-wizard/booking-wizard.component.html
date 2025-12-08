@@ -1,0 +1,415 @@
+
+    <div class="booking-wizard-container">
+      <app-card>
+        <div header>
+          <h1>Rental Application</h1>
+          <p class="header-subtitle">Complete your rental application for this property</p>
+          <div class="progress-steps">
+            @for (step of steps; track step.number; let i = $index) {
+              <div class="step" [class.active]="currentStep() >= step.number" [class.current]="currentStep() === step.number">
+                <div class="step-number">{{ step.number }}</div>
+                <div class="step-label">{{ step.label }}</div>
+              </div>
+              @if (i < steps.length - 1) {
+                <div class="step-connector" [class.active]="currentStep() > step.number"></div>
+              }
+            }
+          </div>
+        </div>
+
+        <div body>
+          @if (loading()) {
+            <div class="loading">Loading property details...</div>
+          } @else if (errorMessage()) {
+            <div class="error-message">
+              <p>{{ errorMessage() }}</p>
+              <app-button variant="primary" [routerLink]="['/properties']">
+                Back to Properties
+              </app-button>
+            </div>
+          } @else {
+            <form [formGroup]="bookingForm" (ngSubmit)="handleSubmit()">
+              <!-- Step 1: Property & Lease Details -->
+              @if (currentStep() === 1) {
+                <div class="step-content">
+                  <h2>Property & Lease Details</h2>
+                  <p class="step-description">Review the property and your desired lease terms</p>
+                  
+                  @if (property()) {
+                    <div class="property-summary">
+                      <img [src]="property()!.images[0]" [alt]="property()!.title" class="property-image" />
+                      <div class="property-info">
+                        <h3>{{ property()!.title }}</h3>
+                        <p class="location">📍 {{ property()!.location.city }}, {{ property()!.location.state || property()!.location.country }}</p>
+                        <div class="details">
+                          <span>🛏️ {{ property()!.bedrooms }} Bedrooms</span>
+                          <span>•</span>
+                          <span>🚿 {{ property()!.bathrooms }} Bathrooms</span>
+                          <span>•</span>
+                          <span>🏠 {{ property()!.type | titlecase }}</span>
+                        </div>
+                        <div class="monthly-rent">
+                          <span class="rent-label">Monthly Rent:</span>
+                          <span class="rent-amount">£{{ property()!.price }}/month</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <div class="lease-details">
+                    <h3>Lease Information</h3>
+                    <div class="detail-row">
+                      <span class="label">🗓️ Move-in Date:</span>
+                      <span class="value">{{ bookingForm.get('check_in_date')?.value | date: 'mediumDate' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="label">🗓️ Lease End Date:</span>
+                      <span class="value">{{ bookingForm.get('check_out_date')?.value | date: 'mediumDate' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="label">📅 Lease Duration:</span>
+                      <span class="value">{{ numberOfNights() }} days ({{ (numberOfNights() / 30) | number:'1.0-0' }} months approx.)</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="label">👥 Number of Tenants:</span>
+                      <span class="value">{{ bookingForm.get('number_of_guests')?.value }}</span>
+                    </div>
+                    
+                    <div class="cost-breakdown">
+                      <h4>Cost Breakdown</h4>
+                      <div class="detail-row">
+                        <span>Monthly Rent</span>
+                        <span>£{{ property()?.price }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span>Security Deposit (1 month)</span>
+                        <span>£{{ property()?.price }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span>Admin Fee</span>
+                        <span>£{{ serviceFee() }}</span>
+                      </div>
+                      <div class="detail-row total">
+                        <strong>Total Due at Move-in</strong>
+                        <strong>£{{ (property()?.price || 0) * 2 + serviceFee() }}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Step 2: Tenant Information -->
+              @if (currentStep() === 2) {
+                <div class="step-content">
+                  <h2>Tenant Information</h2>
+                  <p class="step-description">Please provide details for all tenants who will be living in the property.</p>
+                  
+                  <div formArrayName="guests" class="tenants-list">
+                    @for (guest of guestsArray.controls; track $index; let i = $index) {
+                      <app-card [hoverable]="false">
+                        <div body>
+                          <div [formGroupName]="i" class="tenant-form">
+                            <h4>
+                              @if (i === 0) {
+                                <span class="tenant-badge primary">Primary Tenant</span>
+                              } @else {
+                                <span class="tenant-badge">Additional Tenant {{ i }}</span>
+                              }
+                            </h4>
+                            
+                            <div class="form-row">
+                              <div class="form-group">
+                                <label [for]="'name-' + i">Full Legal Name *</label>
+                                <input 
+                                  [id]="'name-' + i"
+                                  type="text" 
+                                  formControlName="name"
+                                  placeholder="As shown on ID"
+                                />
+                                @if (guest.get('name')?.invalid && guest.get('name')?.touched) {
+                                  <span class="error">Full name is required</span>
+                                }
+                              </div>
+
+                              <div class="form-group">
+                                <label [for]="'age-' + i">Age *</label>
+                                <input 
+                                  [id]="'age-' + i"
+                                  type="number" 
+                                  formControlName="age"
+                                  placeholder="Must be 18+"
+                                  min="18"
+                                  max="120"
+                                />
+                                @if (guest.get('age')?.invalid && guest.get('age')?.touched) {
+                                  <span class="error">Must be 18 or older</span>
+                                }
+                              </div>
+                            </div>
+
+                            <div class="form-row">
+                              <div class="form-group">
+                                <label [for]="'email-' + i">Email Address *</label>
+                                <input 
+                                  [id]="'email-' + i"
+                                  type="email" 
+                                  formControlName="email"
+                                  placeholder="For lease agreement"
+                                />
+                                @if (guest.get('email')?.invalid && guest.get('email')?.touched) {
+                                  <span class="error">Valid email required</span>
+                                }
+                              </div>
+
+                              <div class="form-group">
+                                <label [for]="'phone-' + i">Phone Number *</label>
+                                <input 
+                                  [id]="'phone-' + i"
+                                  type="tel" 
+                                  formControlName="phone"
+                                  placeholder="Contact number"
+                                />
+                                @if (guest.get('phone')?.invalid && guest.get('phone')?.touched) {
+                                  <span class="error">Phone number required</span>
+                                }
+                              </div>
+                            </div>
+
+                            @if (i === 0) {
+                              <div class="form-row">
+                                <div class="form-group full-width">
+                                  <label>Current Address</label>
+                                  <input 
+                                    type="text" 
+                                    placeholder="Your current residential address"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div class="form-row">
+                                <div class="form-group">
+                                  <label>Employment Status</label>
+                                  <select>
+                                    <option value="">Select status</option>
+                                    <option value="employed">Employed Full-time</option>
+                                    <option value="self-employed">Self-employed</option>
+                                    <option value="part-time">Part-time</option>
+                                    <option value="student">Student</option>
+                                    <option value="retired">Retired</option>
+                                  </select>
+                                </div>
+
+                                <div class="form-group">
+                                  <label>Annual Income (£)</label>
+                                  <input 
+                                    type="number" 
+                                    placeholder="Gross annual income"
+                                  />
+                                </div>
+                              </div>
+                            }
+
+                            @if (i > 0) {
+                              <app-button 
+                                type="button"
+                                variant="outline" 
+                                (clicked)="removeGuest(i)"
+                              >
+                                Remove Tenant
+                              </app-button>
+                            }
+                          </div>
+                        </div>
+                      </app-card>
+                    }
+                  </div>
+
+                  @if (canAddMoreGuests()) {
+                    <app-button 
+                      type="button"
+                      variant="outline" 
+                      (clicked)="addGuest()"
+                    >
+                      + Add Another Tenant
+                    </app-button>
+                  }
+                </div>
+              }
+
+              <!-- Step 3: Payment & Agreement -->
+              @if (currentStep() === 3) {
+                <div class="step-content">
+                  <h2>Deposit Payment</h2>
+                  <p class="step-description">Secure your rental with the initial deposit payment.</p>
+                  
+                  <div class="payment-notice">
+                    <div class="notice-icon">ℹ️</div>
+                    <div class="notice-content">
+                      <strong>What you're paying today:</strong>
+                      <p>This payment secures your tenancy and includes the first month's rent and security deposit. The security deposit will be protected in a government-approved scheme.</p>
+                    </div>
+                  </div>
+
+                  <div class="payment-form">
+                    <div class="form-group">
+                      <label for="card-name">Cardholder Name *</label>
+                      <input 
+                        id="card-name"
+                        type="text" 
+                        placeholder="Name on card"
+                        required
+                      />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="card-number">Card Number *</label>
+                      <input 
+                        id="card-number"
+                        type="text" 
+                        placeholder="1234 5678 9012 3456"
+                        maxlength="19"
+                        required
+                      />
+                    </div>
+
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="expiry">Expiry Date *</label>
+                        <input 
+                          id="expiry"
+                          type="text" 
+                          placeholder="MM/YY"
+                          maxlength="5"
+                          required
+                        />
+                      </div>
+
+                      <div class="form-group">
+                        <label for="cvv">Security Code *</label>
+                        <input 
+                          id="cvv"
+                          type="text" 
+                          placeholder="CVV"
+                          maxlength="4"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div class="payment-summary">
+                      <h3>Payment Summary</h3>
+                      <div class="detail-row">
+                        <span>First Month's Rent</span>
+                        <span>£{{ property()?.price }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span>Security Deposit</span>
+                        <span>£{{ property()?.price }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span>Admin Fee</span>
+                        <span>£{{ serviceFee() }}</span>
+                      </div>
+                      <div class="detail-row total">
+                        <strong>Total Due Today</strong>
+                        <strong>£{{ (property()?.price || 0) * 2 + serviceFee() }}</strong>
+                      </div>
+                    </div>
+
+                    <div class="agreement-section">
+                      <label class="checkbox-label">
+                        <input type="checkbox" required />
+                        <span>I have read and agree to the <a href="#">Tenancy Agreement</a> and <a href="#">Terms of Service</a></span>
+                      </label>
+                      <label class="checkbox-label">
+                        <input type="checkbox" required />
+                        <span>I confirm that all information provided is accurate and complete</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Step 4: Confirmation -->
+              @if (currentStep() === 4) {
+                <div class="step-content confirmation">
+                  @if (submitting()) {
+                    <div class="submitting">
+                      <div class="spinner"></div>
+                      <p>Processing your rental application...</p>
+                    </div>
+                  } @else if (bookingSuccess()) {
+                    <div class="success-message">
+                      <div class="success-icon">🏠</div>
+                      <h2>Application Submitted!</h2>
+                      <p>Congratulations! Your rental application has been submitted successfully. Our team will review your application and contact you within 24-48 hours.</p>
+                      
+                      <div class="booking-reference">
+                        <span class="label">Application Reference:</span>
+                        <span class="value">#{{ bookingReference() }}</span>
+                      </div>
+
+                      <div class="next-steps">
+                        <h4>What happens next?</h4>
+                        <ol>
+                          <li>📋 Our team will review your application</li>
+                          <li>📞 We'll contact you to arrange a viewing (if not already done)</li>
+                          <li>✍️ Sign the tenancy agreement</li>
+                          <li>🔑 Collect your keys on move-in day!</li>
+                        </ol>
+                      </div>
+
+                      <div class="actions">
+                        <app-button variant="primary" [routerLink]="['/user/bookings']">
+                          View My Applications
+                        </app-button>
+                        <app-button variant="outline" [routerLink]="['/properties']">
+                          Browse More Properties
+                        </app-button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Navigation Buttons -->
+              @if (currentStep() < 4 || !bookingSuccess()) {
+                <div class="wizard-actions">
+                  @if (currentStep() > 1) {
+                    <app-button 
+                      type="button"
+                      variant="outline" 
+                      (clicked)="previousStep()"
+                      [disabled]="submitting()"
+                    >
+                      ← Back
+                    </app-button>
+                  }
+
+                  @if (currentStep() < 3) {
+                    <app-button 
+                      type="button"
+                      variant="primary" 
+                      (clicked)="nextStep()"
+                      [disabled]="!isCurrentStepValid()"
+                    >
+                      Continue →
+                    </app-button>
+                  } @else if (currentStep() === 3) {
+                    <app-button 
+                      type="submit"
+                      variant="primary" 
+                      [loading]="submitting()"
+                      [disabled]="!bookingForm.valid"
+                    >
+                      Submit Application & Pay
+                    </app-button>
+                  }
+                </div>
+              }
+            </form>
+          }
+        </div>
+      </app-card>
+    </div>
+  
