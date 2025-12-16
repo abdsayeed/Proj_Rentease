@@ -127,6 +127,14 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
+  // update current user data
+  updateCurrentUser(user: User): void {
+    this.userSignal.set(user);
+    if (this.isBrowser) {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+  }
+
   // save auth data to signals and storage
   private setAuthData(authData: AuthResponse): void {
     this.userSignal.set(authData.user);

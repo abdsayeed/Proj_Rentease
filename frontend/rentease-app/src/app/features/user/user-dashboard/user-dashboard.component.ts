@@ -87,7 +87,12 @@ export class UserDashboardComponent implements OnInit {
 
   private loadUserData(): void {
     this.userService.getProfile().subscribe({
-      next: () => {
+      next: (response) => {
+        if (response.success && response.data) {
+          // Update auth service with fresh user data
+          this.authService.updateCurrentUser(response.data);
+          this.initializeForm(); // Refresh form with updated data
+        }
         this.loading.set(false);
       },
       error: () => {

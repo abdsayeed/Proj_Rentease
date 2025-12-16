@@ -175,7 +175,7 @@
           <app-card>
             <div header>
               <div class="section-header">
-                <h2>Recent Bookings</h2>
+                <h2>My Rentals</h2>
                 <app-button variant="outline" size="sm" [routerLink]="['/user/bookings']">
                   View All
                 </app-button>
@@ -186,9 +186,9 @@
                 <app-skeleton-loader variant="list" [repeat]="3" />
               } @else if (bookings().length === 0) {
                 <div class="empty-state">
-                  <p>You haven't made any bookings yet.</p>
+                  <p>You haven't rented any properties yet. Find your perfect home today!</p>
                   <app-button variant="primary" [routerLink]="['/properties']">
-                    Browse Properties
+                    Find a Rental
                   </app-button>
                 </div>
               } @else {
@@ -202,9 +202,9 @@
                           <span class="date">{{ booking.check_out_date | date: 'mediumDate' }}</span>
                         </div>
                         <div class="booking-details">
-                          <span class="guests">{{ booking.number_of_guests }} guests</span>
+                          <span class="guests">{{ booking.number_of_guests }} occupants</span>
                           <span class="separator">•</span>
-                          <span class="price">\${{ booking.total_price }}</span>
+                          <span class="price">\${{ booking.total_price }}/mo</span>
                         </div>
                       </div>
                       <div class="booking-status">

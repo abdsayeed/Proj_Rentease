@@ -14,20 +14,7 @@ let isRefreshing = false;
  */
 const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
-/**
- * authInterceptor - Functional HTTP Interceptor with Mutex Pattern
- * 
- * Features:
- * - Automatically adds JWT token to requests
- * - Handles 401 errors with token refresh
- * - Mutex pattern prevents multiple concurrent refresh calls
- * - Queues requests during token refresh
- * 
- * Mutex Pattern Explanation:
- * 1. First 401 error → Sets isRefreshing = true, calls refreshToken()
- * 2. Other 401 errors → Wait on refreshTokenSubject$ BehaviorSubject
- * 3. When refresh completes → Emit new token, all waiting requests retry
- */
+
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn
